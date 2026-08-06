@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHero from '../components/PageHero.astro';
+import ExternalLink from '../components/ExternalLink.astro';
+import { site, pageTitle } from '../site';
+---
+
+<Base
+  title={pageTitle('Página no encontrada')}
+  description="La página que buscás no existe o cambió de dirección."
+  noindex
+>
+  <PageHero
+    eyebrow="Error 404"
+    title="No encontramos esa página"
+    lead="Puede que haya cambiado de dirección o que ya no exista."
+  />
+
+  <section class="mx-auto max-w-6xl px-5 py-20 md:py-28">
+    <p class="max-w-xl text-lg leading-relaxed text-muted">
+      Probá desde el inicio, o escribinos por WhatsApp y te damos una mano.
+    </p>
+    <div class="mt-8 flex flex-wrap items-center gap-5">
+      <a href="/" class="btn-primary">Ir al inicio</a>
+      <ExternalLink href={site.whatsappUrl} class="link-underline font-semibold text-navy">
+        Escribinos por WhatsApp
+      </ExternalLink>
+    </div>
+  </section>
+</Base>

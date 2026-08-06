@@ -1,0 +1,28 @@
+---
+import SlashBand from './SlashBand.astro';
+import ExternalLink from './ExternalLink.astro';
+import { site } from '../site';
+
+// The closing band that invites contact: navy, slash rule, WhatsApp button. The body is a
+// slot so each page keeps its own wording while the channel stays defined in one place.
+interface Props {
+  title: string;
+  /** Small print under the button — typically the number, optionally the address. */
+  note?: string;
+}
+const { title, note } = Astro.props;
+---
+
+<section class="bg-navy text-white">
+  <SlashBand height="h-3" />
+  <div class="mx-auto max-w-3xl px-5 py-20 text-center md:py-24">
+    <h2 class="display-tight text-h1">{title}</h2>
+    <p class="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-sky-2">
+      <slot />
+    </p>
+    <ExternalLink href={site.whatsappUrl} class="btn-primary mt-9">
+      Escribinos por WhatsApp
+    </ExternalLink>
+    {note && <p class="mt-5 text-sm text-sky-2">{note}</p>}
+  </div>
+</section>

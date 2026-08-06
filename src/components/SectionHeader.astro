@@ -1,0 +1,33 @@
+---
+// The eyebrow + heading pair that opens almost every section. Worth a component less for
+// the two lines of markup than for the contrast pairing: --color-orange-deep clears AA on
+// white but not on navy, where it has to become --color-orange-bright. Picking that by
+// hand 19 times is how a section eventually ships unreadable.
+interface Props {
+  eyebrow: string;
+  title?: string;
+  /** Background the header sits on. Drives which orange the eyebrow uses. */
+  tone?: 'light' | 'navy';
+  /** Heading level. Sections nested under another heading pass 'h3'. */
+  as?: 'h2' | 'h3';
+  /** Extra classes for the heading — in practice, max-width constraints. */
+  titleClass?: string;
+}
+const {
+  eyebrow,
+  title,
+  tone = 'light',
+  as: Heading = 'h2',
+  titleClass = '',
+} = Astro.props as Props;
+const onNavy = tone === 'navy';
+---
+
+<p class:list={['eyebrow', onNavy ? 'text-orange-bright' : 'text-orange-deep']}>{eyebrow}</p>
+{
+  title && (
+    <Heading class:list={['mt-4 text-h2', onNavy ? 'text-white' : 'text-navy', titleClass]}>
+      {title}
+    </Heading>
+  )
+}

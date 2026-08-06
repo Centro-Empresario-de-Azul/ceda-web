@@ -1,0 +1,141 @@
+---
+import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+import Base from '../layouts/Base.astro';
+import PageHero from '../components/PageHero.astro';
+import IssueCard from '../components/IssueCard.astro';
+import ExternalLink from '../components/ExternalLink.astro';
+import { site, pageTitle } from '../site';
+import { issues, latest, type Issue } from '../data/magazine';
+
+// Covers are imported eagerly so each issue entry can resolve its own image by filename.
+const covers = import.meta.glob<{ default: ImageMetadata }>('../assets/magazine/*.jpg', {
+  eager: true,
+});
+const coverFor = (file: string) => {
+  const entry = covers[`../assets/magazine/${file}`];
+  if (!entry) {
+    throw new Error(
+      `Cover not found: src/assets/magazine/${file}. Add the image, or fix \`cover\` in src/data/magazine.ts.`,
+    );
+  }
+  return entry.default;
+};
+
+// The archive grows by an issue a month, so only the newest year stays laid out as a grid;
+// earlier years fold into <details>. Anchored on the newest issue rather than the calendar
+// year — a gap of a few months would otherwise leave the open year empty and collapse the
+// whole archive.
+const yearOf = (issue: Issue) => issue.iso.slice(0, 4);
+const currentYear = yearOf(latest);
+
+const older = issues.slice(1);
+const thisYear = older.filter((issue) => yearOf(issue) === currentYear);
+const earlier = older.filter((issue) => yearOf(issue) !== currentYear);
+// `issues` is newest-first, so the Set preserves descending year order.
+const pastYears = [...new Set(earlier.map(yearOf))].map((year) => ({
+  year,
+  items: earlier.filter((issue) => yearOf(issue) === year),
+}));
+
+const editionCount = (n: number) => `${n} ${n === 1 ? 'edición' : 'ediciones'}`;
+---
+
+<Base
+  title={pageTitle('Revista Imagen CEDA')}
+  description={`Imagen ${site.acronym}, la revista digital del ${site.name}. Edición ${latest.number}, ${latest.date}, en PDF y gratuita.`}
+>
+  <PageHero
+    eyebrow="Revista"
+    title="Imagen CEDA"
+    lead="Nuestra revista digital, todos los meses. Actualidad del comercio y la industria de Azul, novedades institucionales y comercios de la ciudad."
+  />
+
+  <section class="mx-auto max-w-6xl px-5 py-20 md:py-28">
+    <div class="grid gap-12 md:grid-cols-[0.8fr_1fr] md:gap-16">
+      <Image
+        src={coverFor(latest.cover)}
+        alt={`Tapa de Imagen ${site.acronym} número ${latest.number}, ${latest.date}`}
+        widths={[320, 560, 840]}
+        sizes="(max-width: 768px) 70vw, 34vw"
+        loading="eager"
+        class="w-full rounded-2xl border border-sky-2 shadow-[0_18px_50px_-24px_rgba(28,58,112,0.5)]"
+      />
+
+      <div>
+        <p class="eyebrow text-orange-deep">Última edición</p>
+        <h2 class="mt-4 text-h2 text-navy">
+          Número {latest.number}
+        </h2>
+        <p class="mt-2 text-lg font-semibold text-muted">
+          <time datetime={latest.iso}>{latest.date}</time> · {latest.pages} páginas
+        </p>
+
+        <p class="mt-6 text-lg leading-relaxed text-muted">{latest.headline}</p>
+
+        <a
+          href={latest.pdf}
+          download={`Imagen ${site.acronym} ${latest.number} (web).pdf`}
+          class="btn-primary mt-8 inline-flex items-center gap-2"
+        >
+          <Icon name="lucide:download" class="size-5" aria-hidden="true" />
+          Descargar en PDF
+        </a>
+
+        <p class="mt-8 max-w-md text-sm leading-relaxed text-muted">
+          La revista es gratuita y se publica en PDF. Si querés recibirla todos los meses,
+          escribinos por WhatsApp.
+        </p>
+        <ExternalLink
+          href={site.whatsappUrl}
+          class="link-underline mt-3 inline-flex items-center gap-2 font-semibold text-navy"
+        >
+          <Icon name="simple-icons:whatsapp" class="size-4" aria-hidden="true" />
+          {site.whatsappDisplay}
+        </ExternalLink>
+      </div>
+    </div>
+
+    {
+      older.length > 0 && (
+        <div class="mt-20">
+          <h2 class="eyebrow text-orange-deep">Ediciones anteriores</h2>
+
+          {thisYear.length > 0 && (
+            <>
+              <h3 class="mt-6 text-lg text-navy">{currentYear}</h3>
+              <ul class="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                {thisYear.map((issue) => (
+                  <IssueCard issue={issue} cover={coverFor(issue.cover)} />
+                ))}
+              </ul>
+            </>
+          )}
+
+          {pastYears.length > 0 && (
+            <div class="mt-12 border-t border-sky-2">
+              {pastYears.map(({ year, items }) => (
+                <details class="group border-b border-sky-2">
+                  <summary class="flex cursor-pointer list-none items-center gap-3 py-5 [&::-webkit-details-marker]:hidden">
+                    <Icon
+                      name="lucide:chevron-down"
+                      class="size-5 shrink-0 text-orange-deep transition-transform group-open:rotate-180"
+                      aria-hidden="true"
+                    />
+                    <h3 class="text-lg text-navy">{year}</h3>
+                    <span class="text-sm text-muted">· {editionCount(items.length)}</span>
+                  </summary>
+                  <ul class="grid gap-6 pb-8 sm:grid-cols-2 lg:grid-cols-4">
+                    {items.map((issue) => (
+                      <IssueCard issue={issue} cover={coverFor(issue.cover)} />
+                    ))}
+                  </ul>
+                </details>
+              ))}
+            </div>
+          )}
+        </div>
+      )
+    }
+  </section>
+</Base>

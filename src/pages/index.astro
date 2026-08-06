@@ -1,0 +1,186 @@
+---
+import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+import Base from '../layouts/Base.astro';
+import SlashBand from '../components/SlashBand.astro';
+import MarkerCircle from '../components/MarkerCircle.astro';
+import SectionHeader from '../components/SectionHeader.astro';
+import ExternalLink from '../components/ExternalLink.astro';
+import ContactBand from '../components/ContactBand.astro';
+import BusinessDirectory from '../components/BusinessDirectory.astro';
+import EventFeature from '../components/EventFeature.astro';
+import { site, address } from '../site';
+import heroImg from '../assets/img/reunion-turismo.jpg';
+import mesaImg from '../assets/img/reunion-juntos-es-mejor.jpg';
+import { upcoming } from '../data/events';
+import { initiatives } from '../data/programs';
+import { featuredBenefits } from '../data/institutional';
+---
+
+<Base
+  title={`${site.acronym} — ${site.name}`}
+  description={`${site.description} Desde ${site.founded}.`}
+>
+  <section class="relative isolate overflow-hidden bg-navy">
+    <Image
+      src={heroImg}
+      alt="Reunión de la comisión directiva de CEDA en su sala de reuniones"
+      widths={[640, 1024, 1600, 2048]}
+      sizes="100vw"
+      loading="eager"
+      fetchpriority="high"
+      class="absolute inset-0 -z-10 h-full w-full object-cover object-center opacity-40"
+    />
+    <div
+      class="absolute inset-0 -z-10 bg-[linear-gradient(105deg,var(--color-navy-ink)_18%,rgba(28,58,112,0.82)_55%,rgba(28,58,112,0.55)_100%)]"
+      aria-hidden="true"
+    >
+    </div>
+
+    <div class="mx-auto max-w-6xl px-5 pt-20 pb-24 md:pt-28 md:pb-32">
+      <p class="eyebrow text-orange-bright">{site.name} · desde {site.founded}</p>
+
+      <img
+        src="/img/logo-white.png"
+        alt=""
+        width="640"
+        height="183"
+        class="mt-6 w-[clamp(7rem,16vw,11rem)]"
+      />
+
+      <h1 class="display-tight mt-4 w-fit text-display text-white md:mt-2">
+        <MarkerCircle>Juntos es<br />mejor</MarkerCircle>
+      </h1>
+
+      <p class="mt-12 max-w-xl text-xl leading-relaxed text-sky-2 md:text-2xl">
+        <strong class="font-semibold text-white">Ningún negocio cambia una ciudad solo.</strong>{
+          ' '
+        }
+        Desde {site.founded}, el comercio, la industria y los servicios de Azul se organizan acá.
+      </p>
+
+      <div class="mt-10 flex flex-wrap gap-4">
+        <ExternalLink href={site.whatsappUrl} class="btn-primary">
+          Sumate al {site.acronym}
+        </ExternalLink>
+        <a href="/beneficios" class="btn-secondary">Ver beneficios</a>
+      </div>
+    </div>
+
+    <SlashBand height="h-3" class="absolute bottom-0 left-0" />
+  </section>
+
+  {
+    upcoming && (
+      <section class="bg-navy py-20 md:py-24">
+        <EventFeature event={upcoming} />
+      </section>
+    )
+  }
+
+  <section class="mx-auto max-w-6xl px-5 py-20 md:py-28">
+    <div class="grid gap-12 md:grid-cols-[1fr_1.15fr] md:gap-16">
+      <div>
+        <SectionHeader eyebrow="Quiénes somos" title="La casa de las empresas de Azul" />
+      </div>
+      <div class="space-y-5 text-lg leading-relaxed text-muted">
+        <p>
+          CEDA nuclea a comerciantes, industriales, prestadores de servicios y productores de Azul.
+          Defendemos los intereses del sector privado local, acercamos herramientas concretas a
+          nuestros socios y llevamos la voz de las empresas ante el municipio y las entidades
+          provinciales y nacionales.
+        </p>
+        <p>
+          Nos fundamos el <strong class="font-semibold text-ink">{site.foundedLong}</strong> como{
+            ' '
+          }
+          {site.foundingName}. Integramos la Confederación Argentina de la Mediana Empresa (CAME) y
+          la Federación Económica de la Provincia de Buenos Aires (FEBA).
+        </p>
+        <p>
+          <a href="/nosotros" class="link-underline font-semibold text-navy"
+            >Conocé cómo nos organizamos</a
+          >
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-sky py-20 md:py-28">
+    <div class="mx-auto max-w-6xl px-5">
+      <SectionHeader
+        eyebrow="En qué estamos"
+        title="Proyectos abiertos, ahora"
+        titleClass="max-w-2xl"
+      />
+
+      <div class="mt-12 grid gap-6 md:grid-cols-2">
+        {
+          initiatives.map((item) => {
+            const Link = item.external ? ExternalLink : 'a';
+            return (
+              <article class="reveal group flex flex-col rounded-2xl border border-sky-2 bg-white p-8 transition-shadow hover:shadow-[0_14px_40px_-18px_rgba(28,58,112,0.45)]">
+                <h3 class="text-2xl leading-tight text-navy">{item.title}</h3>
+                <p class="mt-4 flex-1 leading-relaxed text-muted">{item.body}</p>
+                <Link
+                  href={item.href}
+                  class="mt-6 inline-flex items-center gap-2 font-semibold text-orange-deep"
+                >
+                  {item.cta}
+                  <Icon
+                    name="lucide:arrow-right"
+                    class="size-5 transition-transform group-hover:translate-x-1"
+                    aria-hidden="true"
+                  />
+                </Link>
+              </article>
+            );
+          })
+        }
+      </div>
+    </div>
+  </section>
+
+  <BusinessDirectory />
+
+  <section class="bg-sky py-20 md:py-28">
+    <div class="mx-auto grid max-w-6xl items-center gap-12 px-5 md:grid-cols-2 md:gap-16">
+      <div>
+        <SectionHeader eyebrow="Beneficios" title="Ser socio rinde" />
+        <p class="mt-5 text-lg leading-relaxed text-muted">
+          Bancos, seguros, pagos y un salón propio para tus reuniones y capacitaciones.
+        </p>
+        <ul class="mt-8 space-y-3">
+          {
+            featuredBenefits.map((b) => (
+              <li class="flex items-start gap-3 text-ink">
+                <Icon
+                  name="lucide:check"
+                  class="mt-1 size-5 shrink-0 text-orange-deep"
+                  aria-hidden="true"
+                />
+                {b.name}
+              </li>
+            ))
+          }
+        </ul>
+        <a href="/beneficios" class="link-underline mt-8 inline-block font-semibold text-navy"
+          >Ver todos los beneficios</a
+        >
+      </div>
+
+      <Image
+        src={mesaImg}
+        alt="Socios de CEDA reunidos alrededor de la mesa de la sede"
+        widths={[480, 800, 1200]}
+        sizes="(max-width: 768px) 100vw, 45vw"
+        loading="lazy"
+        class="reveal aspect-[4/3] w-full rounded-2xl object-cover"
+      />
+    </div>
+  </section>
+
+  <ContactBand title={`Sumate al ${site.acronym}`} note={`${site.whatsappDisplay} · ${address}`}>
+    Estamos comenzando una nueva etapa en el {site.name} y queremos que seas parte.
+  </ContactBand>
+</Base>

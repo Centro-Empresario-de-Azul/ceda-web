@@ -1,0 +1,110 @@
+---
+import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+import { site } from '../site';
+import type { CedaEvent } from '../data/events';
+
+interface Props {
+  event: CedaEvent;
+  /** Home uses the compact intro; /programas carries the full detail. */
+  detailed?: boolean;
+}
+const { event, detailed = false } = Astro.props;
+
+// Scoped to events/ deliberately. An eager glob *imports* everything it matches, so a
+// wider pattern emits every jpg under assets/img into the build — including images no
+// page references. A missing file is a build-time failure with the path named, rather
+// than a silent undefined.
+const posters = import.meta.glob<{ default: ImageMetadata }>('../assets/img/events/**/*.jpg', {
+  eager: true,
+});
+const posterEntry = posters[`../assets/img/${event.poster}`];
+if (!posterEntry) {
+  throw new Error(
+    `Poster not found: src/assets/img/${event.poster} (referenced by "${event.title}" in src/data/events.ts) — posters must live under src/assets/img/events/`,
+  );
+}
+const poster = posterEntry.default;
+---
+
+<div class="mx-auto grid max-w-6xl items-center gap-12 px-5 md:grid-cols-[1fr_0.72fr] md:gap-16">
+  <div>
+    <p class="eyebrow text-orange-bright">Próxima actividad</p>
+    <h2 class="display-tight mt-4 text-h2 text-white">{event.title}</h2>
+    <p class="mt-3 text-lg font-semibold text-orange-bright">{event.tagline}</p>
+
+    <p class="mt-6 max-w-xl text-lg leading-relaxed text-sky-2">{event.body}</p>
+
+    {
+      /* A <dl> may wrap each dt/dd pair in exactly one <div> — no deeper nesting, or the
+        list stops being a definition list for assistive tech. */
+    }
+    <dl class="mt-8 space-y-3 text-sky-2">
+      <div>
+        <dt class="sr-only">Fecha y horario</dt>
+        <dd class="flex items-start gap-3">
+          <Icon
+            name="lucide:calendar"
+            class="mt-1 size-5 shrink-0 text-orange-bright"
+            aria-hidden="true"
+          />
+          <span class="font-semibold text-white">
+            <time datetime={event.startISO}>{event.dateLabel}</time>, de {event.timeLabel} hs
+          </span>
+        </dd>
+      </div>
+      <div>
+        <dt class="sr-only">Lugar</dt>
+        <dd class="flex items-start gap-3">
+          <Icon
+            name="lucide:map-pin"
+            class="mt-1 size-5 shrink-0 text-orange-bright"
+            aria-hidden="true"
+          />
+          <span>
+            <span class="block font-semibold text-white">{event.venue}</span>
+            <span class="block text-sm">{event.address}</span>
+          </span>
+        </dd>
+      </div>
+    </dl>
+
+    {
+      detailed && (
+        <div class="mt-8">
+          <p class="eyebrow text-orange-bright">Temas</p>
+          <ul class="mt-3 flex flex-wrap gap-2">
+            {event.topics.map((t: string) => (
+              <li class="rounded-full border border-white/25 px-4 py-1.5 text-sm text-white">
+                {t}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
+
+    <a
+      href={site.whatsappUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="btn-primary mt-8 inline-flex items-center gap-2"
+    >
+      Reservar mi lugar
+      <Icon name="lucide:arrow-right" class="size-5" aria-hidden="true" />
+    </a>
+    <p class="mt-4 text-sm text-sky-2">
+      Más info, valor de la entrada e inscripciones por WhatsApp al {site.whatsappDisplay}. Organiza
+      la {event.organiser}.
+    </p>
+  </div>
+
+  <Image
+    src={poster}
+    alt={`Afiche de ${event.title}, ${event.dateLabel} en ${event.venue}`}
+    widths={[320, 560, 900]}
+    sizes="(max-width: 768px) 70vw, 30vw"
+    loading="lazy"
+    class="reveal w-full rounded-2xl shadow-[0_24px_60px_-28px_rgba(0,0,0,0.8)]"
+  />
+</div>

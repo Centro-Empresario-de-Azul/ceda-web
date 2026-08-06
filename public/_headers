@@ -1,0 +1,48 @@
+# Cloudflare Workers Static Assets response headers.
+#
+# PREREQUISITE: in Cloudflare, set Caching → Configuration → Browser Cache TTL →
+# "Respect Existing Headers". Otherwise Cloudflare overrides the values below and the
+# immutable rules never reach the browser.
+#
+# The site loads no external subresources — fonts, icons, images and the single script are
+# all same-origin — so the policy below stays at 'self' with no CDN allowances. Adding a
+# third-party embed means widening it; adding a link does not (CSP does not govern
+# navigation targets).
+#
+# Google Search Console needs nothing here: DNS TXT and the meta-tag method are both
+# outside CSP. Google Analytics or Tag Manager WOULD need
+#   script-src  https://www.googletagmanager.com
+#   connect-src https://*.google-analytics.com https://*.analytics.google.com
+# and neither is used today.
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self' https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+
+# Astro fingerprints these filenames, so they can never go stale.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Each issue filename carries its number, so a published PDF never changes. Without this
+# the 2.5MB magazine is revalidated on every visit.
+/revista/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Not fingerprinted, so a week rather than forever — stale-while-revalidate keeps repeat
+# visits instant while a replaced logo still propagates.
+/img/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/js/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=3600
+
+# Crawl metadata — a day is plenty, and Search Console re-reads on demand.
+/robots.txt
+  Cache-Control: public, max-age=86400
+/sitemap-index.xml
+  Cache-Control: public, max-age=86400
+/sitemap-0.xml
+  Cache-Control: public, max-age=86400

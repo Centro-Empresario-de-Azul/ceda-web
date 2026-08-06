@@ -1,0 +1,19 @@
+---
+import SlashBand from './SlashBand.astro';
+
+interface Props {
+  eyebrow: string;
+  title: string;
+  lead?: string;
+}
+const { eyebrow, title, lead } = Astro.props;
+---
+
+<section class="relative bg-navy">
+  <div class="mx-auto max-w-6xl px-5 pt-16 pb-16 md:pt-20 md:pb-20">
+    <p class="eyebrow text-orange-bright">{eyebrow}</p>
+    <h1 class="display-tight mt-5 max-w-3xl text-h1 text-white">{title}</h1>
+    {lead && <p class="mt-6 max-w-2xl text-lg leading-relaxed text-sky-2">{lead}</p>}
+  </div>
+  <SlashBand height="h-3" class="absolute bottom-0 left-0" />
+</section>

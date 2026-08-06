@@ -1,0 +1,218 @@
+---
+import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+import Base from '../layouts/Base.astro';
+import PageHero from '../components/PageHero.astro';
+import SectionHeader from '../components/SectionHeader.astro';
+import ExternalLink from '../components/ExternalLink.astro';
+import { site, pageTitle } from '../site';
+import comisionImg from '../assets/img/comision-directiva.jpg';
+import fundacionImg from '../assets/img/fundacion-banner.jpg';
+
+import {
+  subcommittees,
+  foundationMembers,
+  foundationOfficers,
+  foundationAgenda,
+  board,
+  boardTitle,
+} from '../data/institutional';
+import { advocacy } from '../data/advocacy';
+---
+
+<Base
+  title={pageTitle('Nosotros')}
+  description={`Historia desde ${site.founded}, comisión directiva, subcomisiones, Fundación ${site.acronym} y afiliaciones del ${site.name}.`}
+>
+  <PageHero
+    eyebrow="Nosotros"
+    title="Más de un siglo representando a las empresas de Azul"
+    lead="Historia, conducción y la forma en que nos organizamos para trabajar."
+  />
+
+  <section class="mx-auto max-w-6xl px-5 py-20 md:py-28">
+    <div class="grid gap-12 md:grid-cols-[1fr_1.15fr] md:gap-16">
+      <div>
+        <SectionHeader eyebrow="Historia" title={`Desde ${site.founded}`} />
+      </div>
+      <div class="space-y-5 text-lg leading-relaxed text-muted">
+        <p>
+          CEDA se fundó el <strong class="font-semibold text-ink">{site.foundedLong}</strong>, con
+          el nombre de {site.foundingName}.
+        </p>
+        <p>
+          A lo largo de más de un siglo la institución cambió de nombre y de sede, hasta convertirse
+          hacia mediados del siglo XX en el {site.name} que funciona hoy en {site.street}.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-sky py-20 md:py-28">
+    <div class="mx-auto max-w-6xl px-5">
+      <SectionHeader eyebrow="Conducción" title="Comisión Directiva" />
+
+      <Image
+        src={comisionImg}
+        alt="Comisión directiva y socios de CEDA reunidos en la sede, junio de 2026"
+        widths={[600, 1000, 1440]}
+        sizes="(max-width: 1024px) 100vw, 1000px"
+        loading="lazy"
+        class="reveal mt-10 aspect-[16/10] w-full rounded-2xl object-cover"
+      />
+
+      <h3 class="eyebrow mt-12 text-orange-deep">{boardTitle}</h3>
+      <dl class="mt-6 grid gap-x-10 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
+        {
+          board.map((seat) => (
+            <div class="border-l-2 border-sky-2 pl-5">
+              <dt class="eyebrow text-muted">{seat.role}</dt>
+              <dd class="mt-1 leading-snug font-semibold text-navy">{seat.names.join(' · ')}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-5 py-20 md:py-28">
+    <SectionHeader eyebrow="Cómo nos organizamos" title="Subcomisiones" titleClass="max-w-2xl" />
+    <p class="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
+      El trabajo cotidiano de CEDA se reparte en subcomisiones, cada una enfocada en un frente
+      concreto.
+    </p>
+
+    <div class="mt-12 grid gap-6 md:grid-cols-3">
+      {
+        subcommittees.map((sc) => (
+          <article class="reveal rounded-2xl border border-sky-2 bg-white p-8">
+            <span class="block h-1.5 w-12 bg-orange" aria-hidden="true" />
+            <h3 class="mt-6 text-xl leading-tight text-navy">{sc.name}</h3>
+            {sc.motto && <p class="eyebrow mt-2 text-orange-deep">{sc.motto}</p>}
+            <p class="mt-4 leading-relaxed text-muted">{sc.body}</p>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="bg-sky py-20 md:py-28">
+    <div class="mx-auto grid max-w-6xl items-center gap-12 px-5 md:grid-cols-2 md:gap-16">
+      <div>
+        <SectionHeader eyebrow="Fundación" title={`Fundación ${site.name}`} />
+        <p class="mt-5 text-lg leading-relaxed text-muted">
+          Fundada el 14 de julio de 1994, reúne a instituciones públicas y privadas de la ciudad.
+          CEDA es una de ellas. Es una entidad distinta de CEDA, con su propia conducción, y
+          sostiene una agenda de planificación y articulación para el desarrollo de Azul.
+        </p>
+
+        <dl class="mt-8 space-y-2">
+          {
+            foundationOfficers.map((o) => (
+              <div class="flex flex-wrap items-baseline gap-x-3">
+                <dt class="eyebrow text-muted">{o.role}</dt>
+                <dd class="font-semibold text-navy">{o.name}</dd>
+              </div>
+            ))
+          }
+        </dl>
+        <ul class="mt-8 space-y-3">
+          {
+            foundationMembers.map((i) => (
+              <li class="flex items-start gap-3 text-ink">
+                <Icon
+                  name="ph:diamond-fill"
+                  class="mt-1.5 size-3 shrink-0 text-orange"
+                  aria-hidden="true"
+                />
+                {i}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <Image
+        src={fundacionImg}
+        alt={`Banner institucional de la Fundación ${site.name} durante una reunión`}
+        widths={[480, 800, 1030]}
+        sizes="(max-width: 768px) 100vw, 45vw"
+        loading="lazy"
+        class="reveal aspect-[4/5] w-full rounded-2xl object-cover"
+      />
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-5 pt-20 md:pt-28">
+    <SectionHeader
+      eyebrow="Agenda de la Fundación"
+      title="En qué está trabajando"
+      titleClass="max-w-2xl"
+    />
+    <div class="mt-10 grid gap-6 md:grid-cols-3">
+      {
+        foundationAgenda.map((a) => (
+          <article class="reveal rounded-2xl border border-sky-2 bg-white p-8">
+            <span class="block h-1.5 w-12 bg-orange" aria-hidden="true" />
+            <h3 class="mt-6 text-xl leading-tight text-navy">{a.title}</h3>
+            <p class="mt-4 leading-relaxed text-muted">{a.body}</p>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-5 py-20 md:py-28">
+    <SectionHeader eyebrow="Representación" title="Lo que gestionamos" titleClass="max-w-2xl" />
+    <p class="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
+      Llevar la posición de las empresas de Azul ante el municipio y el Concejo Deliberante es parte
+      del trabajo. Estas son gestiones con registro público.
+    </p>
+
+    <ol class="mt-12 space-y-px overflow-hidden rounded-2xl border border-sky-2 bg-sky-2">
+      {
+        advocacy.map((g) => (
+          <li class="bg-white p-7 md:flex md:gap-8">
+            <p class="eyebrow shrink-0 text-orange-deep md:w-20 md:pt-1">{g.year}</p>
+            <div class="mt-3 md:mt-0">
+              <h3 class="text-xl leading-tight text-navy">{g.title}</h3>
+              <p class="mt-3 leading-relaxed text-muted">{g.body}</p>
+              <ExternalLink
+                href={g.source.href}
+                class="link-underline mt-3 inline-block text-sm text-muted"
+              >
+                Fuente: {g.source.label}
+              </ExternalLink>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  <section class="bg-sky py-20 md:py-28">
+    <div class="mx-auto grid max-w-6xl gap-12 px-5 md:grid-cols-2 md:gap-16">
+      <div>
+        <SectionHeader eyebrow="Afiliaciones" title="No trabajamos solos" />
+        <p class="mt-5 text-lg leading-relaxed text-muted">
+          CEDA integra la <strong class="font-semibold text-ink"
+            >Confederación Argentina de la Mediana Empresa (CAME)</strong
+          > y la <strong class="font-semibold text-ink"
+            >Federación Económica de la Provincia de Buenos Aires (FEBA)</strong
+          >, y trabaja junto a cámaras empresarias de la región.
+        </p>
+      </div>
+
+      <div>
+        <SectionHeader eyebrow="Dónde estamos" title={`${site.street}, ${site.city}`} />
+        <p class="mt-5 text-lg leading-relaxed text-muted">
+          Nuestra sede es también el lugar donde se reúnen las subcomisiones y donde funciona el
+          salón de usos múltiples.
+        </p>
+        <a href="/contacto" class="link-underline mt-6 inline-block font-semibold text-navy"
+          >Cómo contactarnos</a
+        >
+      </div>
+    </div>
+  </section>
+</Base>

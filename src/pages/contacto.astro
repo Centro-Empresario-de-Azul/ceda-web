@@ -1,0 +1,113 @@
+---
+import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+import Base from '../layouts/Base.astro';
+import PageHero from '../components/PageHero.astro';
+import ExternalLink from '../components/ExternalLink.astro';
+import { site, pageTitle, address } from '../site';
+import sedeImg from '../assets/img/socios-reunion.jpg';
+---
+
+<Base
+  title={pageTitle('Contacto')}
+  description="Escribinos por WhatsApp al 2281 47-7297, por correo a comunicacionceda@gmail.com, o acercate a España 620, Azul."
+>
+  <PageHero
+    eyebrow="Contacto"
+    title="Hablemos"
+    lead="La vía más rápida es WhatsApp. También podés escribirnos o acercarte a la sede."
+  />
+
+  <section class="mx-auto max-w-6xl px-5 py-20 md:py-28">
+    <div class="grid gap-12 md:grid-cols-[1.1fr_1fr] md:gap-16">
+      <div>
+        <ExternalLink
+          href={site.whatsappUrl}
+          class="group block rounded-2xl bg-orange-deep p-8 text-white transition-colors hover:bg-orange-darker"
+        >
+          <p class="eyebrow flex items-center gap-2 text-white">
+            <Icon name="simple-icons:whatsapp" class="size-4" aria-hidden="true" />
+            WhatsApp
+          </p>
+          <p class="display-tight mt-3 text-4xl">{site.whatsappDisplay}</p>
+          <p class="mt-4 inline-flex items-center gap-2 font-semibold">
+            Abrir el chat
+            <Icon
+              name="lucide:arrow-right"
+              class="size-5 transition-transform group-hover:translate-x-1"
+              aria-hidden="true"
+            />
+          </p>
+        </ExternalLink>
+
+        <dl class="mt-10 space-y-8">
+          <div>
+            <dt class="eyebrow flex items-center gap-2 text-orange-deep">
+              <Icon name="lucide:mail" class="size-4" aria-hidden="true" />
+              Correo
+            </dt>
+            <dd class="mt-2 text-lg">
+              <a
+                href={`mailto:${site.email}`}
+                class="link-underline font-semibold break-all text-navy">{site.email}</a
+              >
+            </dd>
+          </div>
+
+          <div>
+            <dt class="eyebrow flex items-center gap-2 text-orange-deep">
+              <Icon name="lucide:map-pin" class="size-4" aria-hidden="true" />
+              Sede
+            </dt>
+            <dd class="mt-2 text-lg font-semibold text-navy">{address}</dd>
+            <dd class="mt-2">
+              <ExternalLink
+                href={site.maps}
+                class="link-underline inline-flex items-center gap-2 text-muted"
+              >
+                <Icon name="lucide:map" class="size-4" aria-hidden="true" />
+                Ver en Google Maps
+              </ExternalLink>
+            </dd>
+          </div>
+
+          <div>
+            <dt class="eyebrow text-orange-deep">Redes</dt>
+            <dd class="mt-2 flex flex-wrap gap-x-6 gap-y-2 text-lg">
+              <ExternalLink
+                href={site.instagram}
+                class="link-underline inline-flex items-center gap-2 font-semibold text-navy"
+              >
+                <Icon name="simple-icons:instagram" class="size-4" aria-hidden="true" />
+                Instagram
+              </ExternalLink>
+              <ExternalLink
+                href={site.facebook}
+                class="link-underline inline-flex items-center gap-2 font-semibold text-navy"
+              >
+                <Icon name="simple-icons:facebook" class="size-4" aria-hidden="true" />
+                Facebook
+              </ExternalLink>
+            </dd>
+          </div>
+        </dl>
+
+        <p class="mt-10 text-sm leading-relaxed text-muted">
+          La oficina atiende por teléfono {site.officeHours}. Si vas a acercarte a la sede,
+          escribinos antes por WhatsApp para confirmar.
+        </p>
+      </div>
+
+      <div>
+        <Image
+          src={sedeImg}
+          alt="Reunión de socios de CEDA en la sede de España 620"
+          widths={[480, 800, 1200]}
+          sizes="(max-width: 768px) 100vw, 45vw"
+          loading="lazy"
+          class="reveal aspect-[4/5] w-full rounded-2xl object-cover"
+        />
+      </div>
+    </div>
+  </section>
+</Base>

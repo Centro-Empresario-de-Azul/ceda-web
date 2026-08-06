@@ -1,0 +1,24 @@
+#!/bin/sh
+# Fast gate: lint + types. Runs on every commit, so it must stay quick.
+# Installed automatically by the `prepare` script (git config core.hooksPath .githooks).
+set -e
+
+echo "→ prettier"
+npx prettier --check . || {
+  echo "✗ Formatting differs. Run: npm run format"
+  exit 1
+}
+
+echo "→ eslint"
+npx eslint . || {
+  echo "✗ Lint failed. Fix, or run: npm run lint:fix"
+  exit 1
+}
+
+echo "→ astro check"
+npx astro check || {
+  echo "✗ Type check failed."
+  exit 1
+}
+
+echo "✓ pre-commit passed"

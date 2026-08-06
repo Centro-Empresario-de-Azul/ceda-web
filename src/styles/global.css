@@ -1,0 +1,230 @@
+@import 'tailwindcss';
+
+/* Archivo carries a width axis — used to reach the condensed display setting of
+   CEDA's own "JUNTOS ES MEJOR" lettering. */
+@import '@fontsource-variable/archivo/wdth.css';
+@import '@fontsource-variable/inter/wght.css';
+
+@theme {
+  /* Sampled from CEDA's campaign artwork. */
+  --color-navy: #1c3a70;
+  --color-navy-deep: #14284f;
+  --color-navy-ink: #0d1b36;
+  /* Vivid brand orange — graphics only (slash band, marker circle, rules, borders).
+     Against white it reaches just 3.03:1, so it must never carry small text. */
+  --color-orange: #ed7016;
+  /* Accessible orange for text on light backgrounds and for filled buttons.
+     5.3:1 on white, 4.8:1 on --color-sky. Taken from CEDA's own flyer palette. */
+  --color-orange-deep: #b8480f;
+  --color-orange-darker: #97390a;
+  /* For text on navy — 4.8:1 against --color-navy. */
+  --color-orange-bright: #f9903f;
+  --color-sky: #eff4fa;
+  --color-sky-2: #d7e5f2;
+  --color-ink: #16223c;
+  --color-muted: #55637d;
+
+  --font-display: 'Archivo Variable', system-ui, sans-serif;
+  --font-sans: 'Inter Variable', system-ui, sans-serif;
+
+  --text-display: clamp(2.6rem, 7vw, 5.5rem);
+  --text-h1: clamp(2.1rem, 5vw, 3.6rem);
+  --text-h2: clamp(1.6rem, 3.2vw, 2.4rem);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-ink);
+    background: #fff;
+    line-height: 1.65;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  .display {
+    font-family: var(--font-display);
+    font-variation-settings:
+      'wdth' 92,
+      'wght' 700;
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-orange);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: var(--color-orange);
+    color: #fff;
+  }
+}
+
+@layer components {
+  /* Display setting: condensed and heavy, matching CEDA's banner lettering. */
+  .display-tight {
+    font-family: var(--font-display);
+    font-variation-settings:
+      'wdth' 80,
+      'wght' 800;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
+    text-transform: uppercase;
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-variation-settings:
+      'wdth' 88,
+      'wght' 700;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.78rem;
+  }
+
+  /* CEDA's signature device: a band of diagonal navy and orange slashes.
+     Rebuilt from their print artwork. */
+  .slash-band {
+    background-image: repeating-linear-gradient(
+      66deg,
+      var(--color-navy) 0 18px,
+      transparent 18px 30px,
+      var(--color-orange) 30px 48px,
+      transparent 48px 62px
+    );
+  }
+
+  /* Single definition of the primary call to action, so its contrast is guaranteed
+     everywhere it appears. */
+  .btn-primary {
+    display: inline-block;
+    border-radius: 9999px;
+    background: var(--color-orange-deep);
+    color: #fff;
+    font-weight: 600;
+    padding: 0.875rem 1.75rem;
+    transition: background-color 0.2s ease;
+  }
+
+  .btn-primary:hover {
+    background: var(--color-orange-darker);
+  }
+
+  .btn-secondary {
+    display: inline-block;
+    border-radius: 9999px;
+    border: 1px solid rgb(255 255 255 / 0.45);
+    color: #fff;
+    font-weight: 600;
+    padding: 0.875rem 1.75rem;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .btn-secondary:hover {
+    border-color: #fff;
+    background: rgb(255 255 255 / 0.12);
+  }
+
+  /* On the home page the hero already carries the logo, so the nav mark stays out of the
+     way until the reader scrolls past it. Falls back to permanently visible wherever
+     scroll-driven animation is unsupported, so the logo is never lost. */
+  .nav-logo-reveal {
+    opacity: 1;
+  }
+
+  /* Revealing it on keyboard focus keeps it from being an invisible tab stop. */
+  .nav-logo-reveal:focus-visible {
+    animation: none;
+    opacity: 1;
+  }
+
+  .link-underline {
+    background-image: linear-gradient(var(--color-orange), var(--color-orange));
+    background-size: 0% 2px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.28s ease;
+  }
+
+  .link-underline:hover {
+    background-size: 100% 2px;
+  }
+}
+
+/* Scroll-driven reveal, native — no animation library. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    /* Longhands, deliberately — see the note on .nav-logo-reveal below. A shorthand here
+       gets folded into `animation: ... view()`, which is invalid and silently dropped. */
+    .reveal {
+      animation-name: reveal-in;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 45%;
+    }
+  }
+
+  @supports (animation-timeline: scroll()) {
+    /* Longhands, deliberately — the minifier folds an `animation` shorthand plus
+       `animation-timeline` into `animation: ... scroll(root)`, which is invalid (the
+       shorthand resets the timeline but cannot set it) and gets dropped entirely. */
+    .nav-logo-reveal {
+      animation-name: nav-logo-in;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(root block);
+      animation-range: 32px 200px;
+    }
+  }
+}
+
+/* Scroll-driven animations never advance without a scroll, so anything relying on them is
+   invisible when printed, captured full-page, or rendered by a tool that does not scroll.
+   Force the finished state. */
+@media print {
+  .reveal,
+  .nav-logo-reveal {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+@keyframes nav-logo-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Transform only, deliberately. Fading text in on scroll leaves it semi-transparent for
+   as long as the reader sits mid-range, which fails contrast — and no timing tweak removes
+   that window, only narrows it. A rise reads as a reveal and keeps every word legible. */
+@keyframes reveal-in {
+  from {
+    transform: translateY(22px);
+  }
+  to {
+    transform: none;
+  }
+}

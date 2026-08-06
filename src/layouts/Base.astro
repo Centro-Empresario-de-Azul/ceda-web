@@ -1,0 +1,345 @@
+---
+import '../styles/global.css';
+import { Icon } from 'astro-icon/components';
+import { site, nav, address } from '../site';
+import { upcoming } from '../data/events';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Error pages must not be indexed, and must not claim a canonical URL. */
+  noindex?: boolean;
+}
+const { title, description, noindex = false } = Astro.props;
+// build.format 'file' emits /index.html and /nosotros.html; normalise both those and any
+// trailing slash back to the clean route Cloudflare actually serves.
+const path = Astro.url.pathname
+  .replace(/\.html$/, '')
+  .replace(/\/index$/, '/')
+  .replace(/(.)\/$/, '$1');
+const canonical = new URL(path, Astro.site).href;
+const ogImage = new URL('/img/og.png', Astro.site).href;
+
+const organization = {
+  '@type': 'Organization',
+  '@id': `${site.origin}/#organizacion`,
+  name: site.name,
+  alternateName: site.acronym,
+  description: site.description,
+  foundingDate: site.foundedISO,
+  url: site.origin,
+  logo: new URL('/img/logo.png', Astro.site).href,
+  image: ogImage,
+  email: site.email,
+  telephone: site.whatsappE164,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: site.street,
+    addressLocality: site.city,
+    addressRegion: site.region,
+    postalCode: site.postalCode,
+    addressCountry: site.country,
+  },
+  geo: { '@type': 'GeoCoordinates', latitude: site.latitude, longitude: site.longitude },
+  hasMap: site.maps,
+  areaServed: { '@type': 'City', name: `${site.city}, ${site.region}, Argentina` },
+  memberOf: [
+    { '@type': 'Organization', name: 'Confederación Argentina de la Mediana Empresa (CAME)' },
+    {
+      '@type': 'Organization',
+      name: 'Federación Económica de la Provincia de Buenos Aires (FEBA)',
+    },
+  ],
+  sameAs: [site.instagram, site.facebook],
+};
+
+// Home is the site root, so it gets no trail. Noindex pages get none either — a
+// BreadcrumbList would advertise a URL we are asking search engines to skip.
+const breadcrumb =
+  path === '/' || noindex
+    ? null
+    : {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Inicio', item: site.origin },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: nav.find((n) => n.href === path)?.label ?? title,
+            item: canonical,
+          },
+        ],
+      };
+
+// A dated event is the kind of thing search engines surface directly, so it is described
+// wherever it is promoted. Dropped automatically once the event has passed.
+const eventSchema =
+  upcoming && (path === '/' || path === '/programas')
+    ? [
+        {
+          '@type': 'Event',
+          name: upcoming.title,
+          description: upcoming.body,
+          startDate: upcoming.startISO,
+          endDate: upcoming.endISO,
+          eventStatus: 'https://schema.org/EventScheduled',
+          eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+          inLanguage: 'es-AR',
+          location: {
+            '@type': 'Place',
+            name: upcoming.venue,
+            address: {
+              '@type': 'PostalAddress',
+              streetAddress: upcoming.address.replace(`, ${site.city}`, ''),
+              addressLocality: site.city,
+              addressRegion: site.region,
+              addressCountry: site.country,
+            },
+          },
+          organizer: { '@id': `${site.origin}/#organizacion` },
+          image: new URL('/img/og.png', Astro.site).href,
+        },
+      ]
+    : [];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    organization,
+    {
+      '@type': 'WebSite',
+      url: site.origin,
+      name: site.name,
+      inLanguage: 'es-AR',
+      publisher: { '@id': `${site.origin}/#organizacion` },
+    },
+    ...(breadcrumb ? [breadcrumb] : []),
+    ...eventSchema,
+  ],
+};
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {
+      noindex ? (
+        <meta name="robots" content="noindex, follow" />
+      ) : (
+        <link rel="canonical" href={canonical} />
+      )
+    }
+    <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/img/favicon-48.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#1c3a70" />
+    {
+      site.googleSiteVerification && (
+        <meta name="google-site-verification" content={site.googleSiteVerification} />
+      )
+    }
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content="es_AR" />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`Logo de ${site.name}`} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={ogImage} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(schema)} is:inline />
+  </head>
+
+  <body class="antialiased">
+    <a
+      href="#contenido"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[999] focus:rounded focus:bg-orange-deep focus:px-4 focus:py-2 focus:font-semibold focus:text-white"
+      >Saltar al contenido</a
+    >
+
+    <header class="sticky top-0 z-50 bg-navy shadow-[0_1px_0_rgba(255,255,255,0.12)]">
+      <nav class="mx-auto flex max-w-6xl items-center gap-4 px-5 py-3" aria-label="Principal">
+        <a
+          href="/"
+          class:list={['flex shrink-0 items-center', path === '/' && 'nav-logo-reveal']}
+          aria-label={`${site.name} — inicio`}
+        >
+          <img
+            src="/img/logo-white.png"
+            alt={site.name}
+            width="640"
+            height="183"
+            class="h-9 w-auto"
+          />
+        </a>
+
+        <div class="ml-auto hidden items-center gap-7 lg:flex">
+          {
+            nav.map((item) => {
+              const active = path === item.href;
+              return (
+                <a
+                  href={item.href}
+                  aria-current={active ? 'page' : undefined}
+                  class:list={[
+                    'eyebrow tracking-[0.12em] transition-colors',
+                    active ? 'text-orange-bright' : 'text-sky-2 hover:text-white',
+                  ]}
+                >
+                  {item.label}
+                </a>
+              );
+            })
+          }
+          <a
+            href={site.whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="rounded-full bg-orange-deep px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-darker"
+            >WhatsApp</a
+          >
+        </div>
+
+        <button
+          type="button"
+          id="nav-toggle"
+          class="group ml-auto flex h-10 items-center gap-2 rounded px-2 text-white lg:hidden"
+          aria-label="Abrir menú"
+          aria-expanded="false"
+          aria-controls="nav-mobile"
+        >
+          <Icon name="lucide:menu" class="size-6 group-aria-expanded:hidden" aria-hidden="true" />
+          <Icon
+            name="lucide:x"
+            class="hidden size-6 group-aria-expanded:block"
+            aria-hidden="true"
+          />
+          <span class="eyebrow">Menú</span>
+        </button>
+      </nav>
+
+      <div id="nav-mobile" class="hidden border-t border-white/10 bg-navy lg:hidden">
+        <div class="mx-auto flex max-w-6xl flex-col px-5 py-3">
+          {
+            nav.map((item) => (
+              <a
+                href={item.href}
+                aria-current={path === item.href ? 'page' : undefined}
+                class:list={[
+                  'border-b border-white/10 py-3 font-semibold',
+                  path === item.href ? 'text-orange-bright' : 'text-sky-2',
+                ]}
+              >
+                {item.label}
+              </a>
+            ))
+          }
+          <a
+            href={site.whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-primary mt-4 text-center">Escribinos por WhatsApp</a
+          >
+        </div>
+      </div>
+    </header>
+
+    <main id="contenido">
+      <slot />
+    </main>
+
+    <footer class="bg-navy-deep text-sky-2">
+      <div class="mx-auto grid max-w-6xl gap-10 px-5 py-14 md:grid-cols-3">
+        <div>
+          <img
+            src="/img/logo-white.png"
+            alt={site.name}
+            width="640"
+            height="183"
+            class="h-10 w-auto"
+          />
+          <p class="mt-4 max-w-xs text-sm leading-relaxed">
+            {site.name} · desde {site.founded}
+          </p>
+        </div>
+
+        <div>
+          <h2 class="eyebrow text-white">Contacto</h2>
+          <ul class="mt-4 space-y-2.5 text-sm">
+            <li class="flex items-start gap-2.5">
+              <Icon name="lucide:map-pin" class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+              <a
+                href={site.maps}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link-underline text-white">{address}</a
+              >
+            </li>
+            <li class="flex items-start gap-2.5">
+              <Icon
+                name="simple-icons:whatsapp"
+                class="mt-0.5 size-4 shrink-0"
+                aria-hidden="true"
+              />
+              <a
+                href={site.whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link-underline text-white">{site.whatsappDisplay}</a
+              >
+            </li>
+            <li class="flex items-start gap-2.5">
+              <Icon name="lucide:mail" class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+              <a href={`mailto:${site.email}`} class="link-underline break-all text-white"
+                >{site.email}</a
+              >
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <h2 class="eyebrow text-white">Seguinos</h2>
+          <ul class="mt-4 space-y-2.5 text-sm">
+            <li class="flex items-center gap-2.5">
+              <Icon name="simple-icons:instagram" class="size-4 shrink-0" aria-hidden="true" />
+              <a
+                href={site.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link-underline text-white">Instagram</a
+              >
+            </li>
+            <li class="flex items-center gap-2.5">
+              <Icon name="simple-icons:facebook" class="size-4 shrink-0" aria-hidden="true" />
+              <a
+                href={site.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link-underline text-white">Facebook</a
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="border-t border-white/10">
+        <p class="mx-auto max-w-6xl px-5 py-6 text-xs">
+          © {new Date().getFullYear()}
+          {site.name}. Todos los derechos reservados.
+        </p>
+      </div>
+    </footer>
+
+    <script src="/js/nav.js" is:inline defer></script>
+  </body>
+</html>

@@ -1,0 +1,46 @@
+#!/bin/sh
+# Slower gate: build, then check the built HTML for the failure modes that a linter
+# structurally cannot see — they all produce valid code that renders wrongly.
+set -e
+
+echo "→ build"
+npm run build >/dev/null || { echo "✗ Build failed."; exit 1; }
+
+echo "→ content checks"
+node --input-type=module -e '
+import { readFileSync, readdirSync } from "node:fs";
+
+const pages = readdirSync("dist").filter((f) => f.endsWith(".html"));
+let failed = 0;
+const fail = (msg) => { console.error("  ✗ " + msg); failed = 1; };
+
+for (const page of pages) {
+  const html = readFileSync("dist/" + page, "utf8");
+
+  // Astro strips the newline between text and an adjacent element, fusing words
+  // ("solo.Desde"). Valid HTML, wrong copy — only visible in the output.
+  const body = html.slice(html.indexOf("<body"));
+  for (const m of body.matchAll(/<(p|li|dd|dt|h[1-4]|a)\b[^>]*>(.*?)<\/\1>/gs)) {
+    if (/<(p|div|section|ul|ol)\b/.test(m[2])) continue;
+    const text = m[2].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+    const fused = text.match(/[a-záéíóúñ]\.[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}/);
+    if (fused) fail(page + ": fused words — " + fused[0] + "  (add {\" \"} between the text and the tag)");
+  }
+
+  // Retired contact details and the shortener must never reappear.
+  if (html.includes("42-4028")) fail(page + ": retired landline 02281 42-4028");
+  if (html.includes("bit.ly")) fail(page + ": bit.ly shortener — link the destination directly");
+  if (/entidad gremial/i.test(html)) fail(page + ": CEDA is a cámara empresarial, not an entidad gremial");
+}
+
+// public/ is copied verbatim, so anything that lands in it ships — including junk the
+// editor drops there. .DS_Store is gitignored, so git never warns about it.
+const junk = readdirSync("dist", { recursive: true })
+  .filter((f) => /(^|\/)(\.DS_Store|Thumbs\.db)$/.test(String(f)));
+for (const f of junk) fail("dist/" + f + " would be deployed — delete it from public/");
+
+if (failed) { console.error("\n✗ Content checks failed."); process.exit(1); }
+console.log("  ✓ " + pages.length + " pages clean");
+'
+
+echo "✓ pre-push passed"

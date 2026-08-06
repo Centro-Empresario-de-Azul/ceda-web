@@ -1,0 +1,55 @@
+---
+import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+import SectionHeader from './SectionHeader.astro';
+import ExternalLink from './ExternalLink.astro';
+import { site } from '../site';
+import directoryImg from '../assets/img/business-directory/impulsemos-azul.jpg';
+
+// The Subcomisión de Jóvenes' directory of shops, trades and services — "Guía de Azul" to
+// the reader. Promoted on both / and /programas, which used to be near-verbatim copies
+// that drifted apart; `detailed` is now the only difference between them.
+interface Props {
+  /** Alternating section background. */
+  tone?: 'white' | 'sky';
+  /** Longer copy for /programas, where the section is the subject rather than a teaser. */
+  detailed?: boolean;
+}
+const { tone = 'white', detailed = false } = Astro.props;
+---
+
+<section class:list={[tone === 'sky' && 'bg-sky', 'py-20 md:py-28']}>
+  <div class="mx-auto grid max-w-6xl items-center gap-12 px-5 md:grid-cols-[1.05fr_1fr] md:gap-16">
+    <div>
+      <SectionHeader eyebrow="Guía de Azul" title="Sumemos fuerzas, impulsemos Azul" />
+      <div class="mt-6 space-y-5 text-lg leading-relaxed text-muted">
+        <p>
+          La <strong class="font-semibold text-ink">Subcomisión de Jóvenes</strong> está construyendo
+          la guía de comercios, oficios y servicios del partido de Azul: una base de datos de todo lo
+          que se ofrece en la ciudad, para que cualquiera pueda buscarlo y encontrarlo.
+        </p>
+        <p>
+          Se arma con los negocios que se registran. Anotarte es gratis, lleva un minuto y es lo que
+          hace que la guía sirva{detailed ? ': cuantos más estén, más útil es para todos' : ''}.
+        </p>
+      </div>
+      <ExternalLink
+        href={site.registryForm}
+        class="btn-primary mt-8 inline-flex items-center gap-2"
+      >
+        Registrar mi negocio
+        <Icon name="lucide:arrow-right" class="size-5" aria-hidden="true" />
+      </ExternalLink>
+      <p class="mt-4 text-sm text-muted">La guía está en desarrollo.</p>
+    </div>
+
+    <Image
+      src={directoryImg}
+      alt="Sumemos fuerzas, impulsemos Azul — campaña de CEDA para registrar los comercios de la ciudad"
+      widths={[480, 800, 1200]}
+      sizes="(max-width: 768px) 100vw, 45vw"
+      loading="lazy"
+      class="reveal w-full rounded-2xl border border-sky-2"
+    />
+  </div>
+</section>

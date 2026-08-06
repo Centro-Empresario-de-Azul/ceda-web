@@ -1,0 +1,33 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ceda-web",
+  "compatibility_date": "2026-07-02",
+  "observability": {
+    "enabled": true,
+  },
+  // Cloudflare Workers Builds runs the deploy command only. Without this hook there is
+  // no dist/ to upload, and `wrangler deploy` fails on a missing assets directory.
+  "build": {
+    "command": "npm run build",
+  },
+
+  // Custom domain, ready to enable. Keep commented until ceda.org.ar is delegated to
+  // Cloudflare and the zone appears in the account — `wrangler deploy` creates the domain
+  // through the API, so it fails on a zone it cannot find, which would break the deploy
+  // that currently works. Once the zone is live, uncomment and deploy; Cloudflare creates
+  // the DNS record and certificate itself, so no manual record is needed.
+  //
+  // Only www is listed. The apex redirects to www via a Cloudflare Redirect Rule, which
+  // is terminating and runs ahead of Workers, so apex traffic never reaches this Worker.
+  // The apex still needs a proxied DNS record for that rule to have something to match.
+  //
+  // "routes": [
+  //   { "pattern": "www.ceda.org.ar", "custom_domain": true }
+  // ],
+
+  "assets": {
+    "directory": "./dist",
+    // Without this, unknown paths return an empty body instead of dist/404.html.
+    "not_found_handling": "404-page",
+  },
+}

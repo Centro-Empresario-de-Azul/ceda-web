@@ -1,0 +1,10 @@
+dist
+.astro
+.wrangler
+node_modules
+package-lock.json
+
+# Binary and generated assets — nothing here is source.
+public/img
+public/revista
+src/assets

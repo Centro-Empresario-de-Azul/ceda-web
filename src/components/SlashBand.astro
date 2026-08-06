@@ -1,0 +1,12 @@
+---
+// CEDA frames its campaign artwork with a band of diagonal navy/orange slashes on white.
+// The white base is essential: without it the navy slashes disappear against a navy
+// section and the band reads as stray orange dashes.
+interface Props {
+  height?: string;
+  class?: string;
+}
+const { height = 'h-3', class: className = '' } = Astro.props;
+---
+
+<div class:list={[height, 'slash-band w-full bg-white', className]} aria-hidden="true"></div>
