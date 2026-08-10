@@ -1,7 +1,6 @@
-// Issues of Revista Imagen CEDA, newest first.
-//
-// To add one: run `node scripts/prepare-magazine.mjs <source.pdf> <number>`, then prepend
-// an entry here. `cover` must match a file in src/assets/magazine/.
+// Issues of Revista Imagen CEDA, newest first. To add one: run
+// `node scripts/prepare-magazine.mjs <source.pdf> <number>`, then prepend an entry here;
+// `cover` must match a file in src/assets/magazine/.
 
 import { z } from 'zod';
 

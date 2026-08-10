@@ -67,10 +67,8 @@ export const foundationMembers = [
   'Municipalidad de Azul',
 ];
 
-/* Benefits exactly as published in Revista Imagen CEDA N.º 316 (julio 2026). This is the
-   only list — the home page teaser derives from `featured` below rather than restating it.
-   An earlier hardcoded teaser kept advertising Medife and Banco Credicoop after both were
-   removed here for lacking a source. */
+/* Benefits as published in Revista Imagen CEDA N.º 316. Only list — the home page teaser
+   derives from `featured` below; a hardcoded teaser once kept advertising retracted ones. */
 export const benefits = z.array(benefitSchema).parse([
   {
     name: 'Salón para reuniones y eventos',

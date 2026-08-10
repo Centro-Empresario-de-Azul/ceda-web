@@ -22,10 +22,8 @@ const coverFor = (file: string) => {
   return entry.default;
 };
 
-// The archive grows by an issue a month, so only the newest year stays laid out as a grid;
-// earlier years fold into <details>. Anchored on the newest issue rather than the calendar
-// year — a gap of a few months would otherwise leave the open year empty and collapse the
-// whole archive.
+// Only the newest year stays a grid; earlier years fold into <details>. Anchored on the
+// newest issue, not the calendar year, so a gap of a few months can't leave it empty.
 const yearOf = (issue: Issue) => issue.iso.slice(0, 4);
 const currentYear = yearOf(latest);
 

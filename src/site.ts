@@ -37,10 +37,8 @@ export const site = {
   email: 'comunicacionceda@gmail.com',
   instagram: 'https://www.instagram.com/cedaazul/',
   facebook: 'https://www.facebook.com/Centroempresariodeazul/',
-  /* Google Form behind CEDA's bit.ly/sumate-azul. Linked directly here: the shortener
-     earns its place on print and in the Instagram bio, but on the web it only adds two
-     redirect hops, a third party in the click path, and a "bit.ly" hover that reads like
-     phishing. It is also a single point of failure for the primary CTA. */
+  /* Google Form behind CEDA's bit.ly/sumate-azul. Linked directly: on the web the shortener
+     only adds redirect hops and a "bit.ly" hover that reads like phishing. */
   registryForm:
     'https://docs.google.com/forms/d/e/1FAIpQLSeYq-jbdI4PbgsA10942-rma6IayJVcBI1T-cho1z5eXNZKyw/viewform',
 

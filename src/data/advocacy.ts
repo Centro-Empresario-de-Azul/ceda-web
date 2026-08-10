@@ -86,10 +86,7 @@ const entries = z.array(entrySchema).parse([
   },
 ]);
 
-/**
- * Newest first, so the array above can be edited in any order. `year` is derived rather
- * than stored — it used to be a second field that could disagree with `date`.
- */
+/** Newest first; `year` is derived rather than stored so it can't disagree with `date`. */
 export const advocacy = [...entries]
   .sort((a, b) => b.date.localeCompare(a.date))
   .map((entry) => ({ ...entry, year: entry.date.slice(0, 4) }));

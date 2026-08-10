@@ -1,9 +1,6 @@
-// Dated events. Anything here is promoted on the home page until it has passed, then it
-// disappears on the next build — so rebuild after an event, or it lingers as "upcoming".
-//
-// Only publish what is on CEDA's own flyer. Ticket prices and speaker counts change right
-// up to the day; leave those to WhatsApp rather than putting a number on the site that
-// someone has to honour.
+// Promoted on the home page until it passes, then disappears on the next build — rebuild
+// after an event or it lingers as "upcoming". Only publish what's on CEDA's own flyer;
+// prices and speaker counts move until the last minute, so leave those to WhatsApp.
 
 import { z } from 'zod';
 

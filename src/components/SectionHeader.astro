@@ -1,8 +1,6 @@
 ---
-// The eyebrow + heading pair that opens almost every section. Worth a component less for
-// the two lines of markup than for the contrast pairing: --color-orange-deep clears AA on
-// white but not on navy, where it has to become --color-orange-bright. Picking that by
-// hand 19 times is how a section eventually ships unreadable.
+// Exists mainly to pick the accessible orange: --color-orange-deep clears AA on white but
+// not on navy, where it must become --color-orange-bright.
 interface Props {
   eyebrow: string;
   title?: string;
