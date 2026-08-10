@@ -10,7 +10,9 @@ echo "→ content checks"
 node --input-type=module -e '
 import { readFileSync, readdirSync } from "node:fs";
 
-const pages = readdirSync("dist").filter((f) => f.endsWith(".html"));
+// Recursive: /revista/<number> pages live in a subdirectory, and a top-level-only scan
+// silently skipped every one of them.
+const pages = readdirSync("dist", { recursive: true }).filter((f) => String(f).endsWith(".html"));
 let failed = 0;
 const fail = (msg) => { console.error("  ✗ " + msg); failed = 1; };
 

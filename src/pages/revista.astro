@@ -73,14 +73,20 @@ const editionCount = (n: number) => `${n} ${n === 1 ? 'edición' : 'ediciones'}`
 
         <p class="mt-6 text-lg leading-relaxed text-muted">{latest.headline}</p>
 
-        <a
-          href={latest.pdf}
-          download={`Imagen ${site.acronym} ${latest.number} (web).pdf`}
-          class="btn-primary mt-8 inline-flex items-center gap-2"
-        >
-          <Icon name="lucide:download" class="size-5" aria-hidden="true" />
-          Descargar en PDF
-        </a>
+        <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+          <a href={`/revista/${latest.number}`} class="btn-primary inline-flex items-center gap-2">
+            <Icon name="lucide:book-open" class="size-5" aria-hidden="true" />
+            Leer online
+          </a>
+          <a
+            href={latest.pdf}
+            download={`Imagen ${site.acronym} ${latest.number} (web).pdf`}
+            class="link-underline inline-flex items-center gap-2 font-semibold text-navy"
+          >
+            <Icon name="lucide:download" class="size-4" aria-hidden="true" />
+            Descargar en PDF
+          </a>
+        </div>
 
         <p class="mt-8 max-w-md text-sm leading-relaxed text-muted">
           La revista es gratuita y se publica en PDF. Si querés recibirla todos los meses,

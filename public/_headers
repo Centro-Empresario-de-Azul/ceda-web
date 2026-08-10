@@ -14,21 +14,28 @@
 #   script-src  https://www.googletagmanager.com
 #   connect-src https://*.google-analytics.com https://*.analytics.google.com
 # and neither is used today.
+#
+# The magazine reader (/revista/<number>) renders PDFs client-side with pdf.js, which
+# needs WebAssembly execution and loads its worker from a blob: URL. Both stay
+# same-origin — no third-party host is added. wasm-unsafe-eval is distinct from the far
+# more dangerous unsafe-eval: it does not enable eval().
 
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
-  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self' https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self' 'wasm-unsafe-eval' blob: https://static.cloudflareinsights.com; worker-src 'self' blob:; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
 
 # Astro fingerprints these filenames, so they can never go stale.
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
 
 # Each issue filename carries its number, so a published PDF never changes. Without this
-# the 2.5MB magazine is revalidated on every visit.
-/revista/*
+# the 2.5MB magazine is revalidated on every visit. Scoped to *.pdf: /revista/<number> is
+# an HTML reader page referencing fingerprinted scripts, and caching it forever would
+# leave returning visitors pointed at a script filename the next deploy deletes.
+/revista/*.pdf
   Cache-Control: public, max-age=31536000, immutable
 
 # Not fingerprinted, so a week rather than forever — stale-while-revalidate keeps repeat
