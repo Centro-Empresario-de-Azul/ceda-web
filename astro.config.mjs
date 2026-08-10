@@ -30,6 +30,8 @@ export default defineConfig({
           'download',
           'calendar',
           'chevron-down',
+          'book-open',
+          'zoom-in',
         ],
       },
     }),

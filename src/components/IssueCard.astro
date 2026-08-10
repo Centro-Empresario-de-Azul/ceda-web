@@ -1,5 +1,6 @@
 ---
 import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
 import { site } from '../site';
 import type { Issue } from '../data/magazine';
 
@@ -12,11 +13,7 @@ const { issue, cover } = Astro.props;
 ---
 
 <li>
-  <a
-    href={issue.pdf}
-    download={`Imagen ${site.acronym} ${issue.number} (web).pdf`}
-    class="group block"
-  >
+  <a href={`/revista/${issue.number}`} class="group block">
     <Image
       src={cover}
       alt={`Tapa de Imagen ${site.acronym} número ${issue.number}, ${issue.date}`}
@@ -29,5 +26,14 @@ const { issue, cover } = Astro.props;
     <p class="text-sm text-muted">
       <time datetime={issue.iso}>{issue.date}</time>
     </p>
+  </a>
+  <a
+    href={issue.pdf}
+    download={`Imagen ${site.acronym} ${issue.number} (web).pdf`}
+    class="link-underline mt-1 inline-flex items-center gap-1 text-xs font-semibold text-muted"
+    aria-label={`Descargar Imagen ${site.acronym} número ${issue.number} en PDF`}
+  >
+    <Icon name="lucide:download" class="size-3.5" aria-hidden="true" />
+    Descargar PDF
   </a>
 </li>

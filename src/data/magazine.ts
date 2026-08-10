@@ -31,6 +31,16 @@ export const issues = z
   })
   .parse([
     {
+      number: 317,
+      date: 'Agosto 2026',
+      iso: '2026-08',
+      headline:
+        'El tercer domingo de agosto mueve Azul: claves para aprovechar el Día de las Infancias',
+      pages: 20,
+      pdf: '/revista/imagen-ceda-317-web.pdf',
+      cover: 'cover-317.jpg',
+    },
+    {
       number: 316,
       date: 'Julio 2026',
       iso: '2026-07',

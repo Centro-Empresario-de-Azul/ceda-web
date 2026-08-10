@@ -1,0 +1,175 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageHero from '../../components/PageHero.astro';
+import { Icon } from 'astro-icon/components';
+import { site, pageTitle } from '../../site';
+import { issues } from '../../data/magazine';
+
+export function getStaticPaths() {
+  return issues.map((issue) => ({
+    params: { number: String(issue.number) },
+    props: { issue },
+  }));
+}
+
+const { issue } = Astro.props;
+---
+
+<Base
+  title={pageTitle(`Imagen ${site.acronym} N.º ${issue.number}`)}
+  description={`Leé online la edición N.º ${issue.number} de Imagen ${site.acronym}: ${issue.headline}`}
+>
+  <PageHero eyebrow="Revista" title={`Número ${issue.number}`} lead={issue.headline} />
+
+  <section class="mx-auto max-w-4xl px-5 py-12 md:py-16">
+    <div id="reader-controls" class="mb-6 flex flex-wrap items-center gap-4">
+      <input
+        type="search"
+        id="reader-search"
+        placeholder="Buscar en esta edición…"
+        class="rounded-full border border-sky-2 px-4 py-2 text-sm"
+        aria-label="Buscar en esta edición"
+      />
+
+      <div class="ml-auto flex items-center gap-3">
+        <label for="reader-page-input" class="text-sm text-muted">Página</label>
+        <input
+          type="number"
+          id="reader-page-input"
+          min="1"
+          max={issue.pages}
+          class="w-20 rounded border border-sky-2 px-2 py-1 text-sm"
+        />
+        <button
+          type="button"
+          id="reader-zoom-button"
+          class="rounded border border-sky-2 px-3 py-1.5 text-navy transition-colors hover:bg-sky"
+          aria-label="Ampliar página"
+        >
+          <Icon name="lucide:zoom-in" class="size-4" aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+
+    <ul id="reader-search-results" class="mb-4 hidden space-y-1 text-sm text-muted"></ul>
+
+    <div
+      id="reader-container"
+      class="relative mx-auto"
+      data-pdf-url={issue.pdf}
+      style="height: 70vh; min-height: 420px;"
+    >
+    </div>
+
+    <p id="reader-error" class="mt-4 hidden text-center text-muted">
+      No pudimos cargar la vista previa online. Podés descargar el PDF más abajo.
+    </p>
+
+    <div
+      id="reader-zoom-lightbox"
+      class="fixed inset-0 z-50 flex hidden items-center justify-center bg-black/90 p-6"
+    >
+      <button
+        type="button"
+        data-zoom-close
+        class="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/25"
+        aria-label="Cerrar la vista ampliada"
+      >
+        <Icon name="lucide:x" class="size-6" aria-hidden="true" />
+      </button>
+    </div>
+
+    <div class="mt-8 text-center">
+      <a
+        href={issue.pdf}
+        download={`Imagen ${site.acronym} ${issue.number} (web).pdf`}
+        class="btn-primary inline-flex items-center gap-2"
+      >
+        <Icon name="lucide:download" class="size-5" aria-hidden="true" />
+        Descargar en PDF
+      </a>
+    </div>
+  </section>
+
+  <script>
+    import { loadPdf, getPageCount } from '../../lib/reader/pdf-engine';
+    import { FlipbookReader } from '../../lib/reader/flipbook-reader';
+    import { SearchIndex } from '../../lib/reader/search-index';
+    import { ZoomLightbox } from '../../lib/reader/zoom-lightbox';
+
+    async function boot(): Promise<void> {
+      const container = document.getElementById('reader-container');
+      const errorEl = document.getElementById('reader-error');
+      const controls = document.getElementById('reader-controls');
+      const pageInput = document.getElementById('reader-page-input') as HTMLInputElement | null;
+      if (!container || !pageInput) return;
+
+      const pdfUrl = container.dataset.pdfUrl;
+      if (!pdfUrl) return;
+
+      try {
+        const doc = await loadPdf(pdfUrl);
+        const pageCount = getPageCount(doc);
+        pageInput.max = String(pageCount);
+
+        const reader = new FlipbookReader(container, doc, pageCount);
+        await reader.init();
+
+        pageInput.value = String(reader.getCurrentPage());
+        reader.onPageChange((page) => {
+          pageInput.value = String(page);
+        });
+
+        pageInput.addEventListener('change', () => {
+          const page = Number(pageInput.value);
+          if (Number.isInteger(page)) void reader.goToPage(page);
+        });
+
+        const lightboxRoot = document.getElementById('reader-zoom-lightbox');
+        const zoomButton = document.getElementById('reader-zoom-button');
+        if (lightboxRoot && zoomButton) {
+          const lightbox = new ZoomLightbox(lightboxRoot, (open) =>
+            reader.setGesturesEnabled(!open),
+          );
+          zoomButton.addEventListener('click', () => {
+            void lightbox.open(doc, reader.getCurrentPage());
+          });
+        }
+
+        const searchIndex = new SearchIndex(doc, pageCount);
+        const searchInput = document.getElementById('reader-search') as HTMLInputElement | null;
+        const resultsList = document.getElementById('reader-search-results');
+        searchInput?.addEventListener('input', () => {
+          void (async () => {
+            await searchIndex.whenReady();
+            const results = searchIndex.search(searchInput.value);
+            if (!resultsList) return;
+            resultsList.innerHTML = '';
+            resultsList.classList.toggle('hidden', results.length === 0);
+            for (const result of results) {
+              const li = document.createElement('li');
+              // A button, not a click handler on the <li>: natively focusable and
+              // activatable with Enter/Space, no ARIA needed.
+              const button = document.createElement('button');
+              button.type = 'button';
+              button.textContent = `Página ${result.page}: ${result.snippet}`;
+              button.className = 'w-full cursor-pointer text-left hover:text-navy';
+              button.addEventListener('click', () => void reader.goToPage(result.page));
+              li.appendChild(button);
+              resultsList.appendChild(li);
+            }
+          })();
+        });
+      } catch {
+        // Replace the reader with the message rather than leaving dead controls beside an
+        // empty canvas area. The download button below stays untouched.
+        errorEl?.classList.remove('hidden');
+        container.classList.add('hidden');
+        controls?.classList.add('hidden');
+        document.getElementById('reader-search-results')?.classList.add('hidden');
+      }
+    }
+
+    void boot();
+  </script>
+</Base>

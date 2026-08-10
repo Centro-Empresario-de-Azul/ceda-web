@@ -162,6 +162,26 @@
   .link-underline:hover {
     background-size: 100% 2px;
   }
+
+  /* Magazine reader (StPageFlip + pdf.js): each leaf is a canvas the reader lazily
+     renders into, sized to fill the flip surface StPageFlip computes for it. */
+  .reader-page {
+    background: #fff;
+  }
+
+  .reader-page-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .zoom-lightbox-canvas {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    margin: auto;
+  }
 }
 
 /* Scroll-driven reveal, native — no animation library. */
