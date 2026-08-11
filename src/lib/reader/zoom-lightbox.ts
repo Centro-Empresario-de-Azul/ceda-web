@@ -5,6 +5,7 @@ const ZOOM_SCALE = 3;
 export class ZoomLightbox {
   private canvas: HTMLCanvasElement;
   private isOpen = false;
+  private opening: Promise<void> | null = null;
 
   constructor(
     private root: HTMLElement,
@@ -29,11 +30,20 @@ export class ZoomLightbox {
     });
   }
 
-  async open(doc: PdfDocument, pageNumber: number): Promise<void> {
-    await renderPageToCanvas(doc, pageNumber, this.canvas, ZOOM_SCALE);
-    this.root.classList.remove('hidden');
-    this.isOpen = true;
-    this.onToggle(true);
+  // Guards against a second render() starting on `canvas` before a first one (e.g. from a
+  // double-click) finishes — pdf.js throws if two renders overlap on the same canvas.
+  open(doc: PdfDocument, pageNumber: number): Promise<void> {
+    if (this.opening) return this.opening;
+    this.opening = renderPageToCanvas(doc, pageNumber, this.canvas, ZOOM_SCALE)
+      .then(() => {
+        this.root.classList.remove('hidden');
+        this.isOpen = true;
+        this.onToggle(true);
+      })
+      .finally(() => {
+        this.opening = null;
+      });
+    return this.opening;
   }
 
   close(): void {

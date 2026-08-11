@@ -10,6 +10,7 @@ const KEEP_RADIUS = 3;
 export class FlipbookReader {
   private pageFlip: PageFlip;
   private rendered = new Set<number>();
+  private renderTasks = new Map<number, Promise<void>>();
   private canvases = new Map<number, HTMLCanvasElement>();
   private currentPage = 1;
   private pageListeners: ((page: number) => void)[] = [];
@@ -29,10 +30,7 @@ export class FlipbookReader {
       maxHeight: 1600,
       maxShadowOpacity: 0.5,
       showCover: true,
-      // On. With it off StPageFlip preventDefaults touchstart, so a vertical drag starting
-      // on the book scrolled the page 0px and the download button below stayed out of
-      // reach. On, the same drag scrolls normally; the trade is that a tap now flips on
-      // touch too, matching the click-to-flip desktop already had.
+      // On. Off, StPageFlip preventDefaults touchstart and blocks vertical scroll on the book.
       mobileScrollSupport: true,
       swipeDistance: 30,
     });
@@ -51,11 +49,14 @@ export class FlipbookReader {
     }
 
     this.pageFlip.loadFromHTML(pageElements);
+    this.guardAgainstFlipScrollReset();
     // StPageFlip's page index is 0-based; the reader's public API is 1-based to match how
     // PDF pages are already numbered everywhere else in this codebase (issue.pages, etc).
     this.pageFlip.on('flip', (event) => {
       this.setCurrentPage((event.data as number) + 1);
-      void this.renderAround(this.currentPage);
+      this.renderAround(this.currentPage).catch((err: unknown) =>
+        console.error('FlipbookReader: render around page', this.currentPage, 'failed', err),
+      );
     });
 
     await this.renderAround(1);
@@ -71,6 +72,7 @@ export class FlipbookReader {
   }
 
   async goToPage(pageNumber: number): Promise<void> {
+    if (!Number.isFinite(pageNumber)) return;
     const target = Math.min(Math.max(Math.trunc(pageNumber), 1), this.pageCount);
     await this.renderAround(target);
     this.pageFlip.turnToPage(target - 1);
@@ -81,6 +83,58 @@ export class FlipbookReader {
     // page-flip has no public runtime toggle for its drag handling, so gestures are
     // disabled at the DOM level: with pointer events off, no drag/click ever reaches it.
     this.container.style.pointerEvents = enabled ? 'auto' : 'none';
+  }
+
+  // StPageFlip's forward-flip DOM reorder (HTMLPage.newTemporaryCopy) resets window scroll
+  // to 0 on an unpredictable frame, so a one-shot correction can't catch it — repin scroll
+  // every frame while the gesture reads as a page turn rather than an intentional scroll.
+  private guardAgainstFlipScrollReset(): void {
+    const VERTICAL_SLOP = 60; // matches StPageFlip's own swipe-vs-scroll threshold (swipeDistance * 2)
+    const MONITOR_MS = 600; // covers the flip animation StPageFlip runs after touchend
+    let touchStartY: number | null = null;
+    let lastTouchY = 0;
+    let baselineScrollY = 0;
+    let monitorUntil = 0;
+
+    const monitor = (): void => {
+      if (performance.now() > monitorUntil) return;
+      if (
+        Math.abs(lastTouchY - touchStartY!) < VERTICAL_SLOP &&
+        window.scrollY !== baselineScrollY
+      ) {
+        window.scrollTo({ top: baselineScrollY, behavior: 'instant' });
+      }
+      requestAnimationFrame(monitor);
+    };
+
+    this.container.addEventListener(
+      'touchstart',
+      (event) => {
+        const touch = event.touches[0];
+        if (!touch) return;
+        touchStartY = touch.clientY;
+        lastTouchY = touch.clientY;
+        baselineScrollY = window.scrollY;
+        monitorUntil = performance.now() + MONITOR_MS;
+        requestAnimationFrame(monitor);
+      },
+      { passive: true },
+    );
+
+    window.addEventListener(
+      'touchmove',
+      (event) => {
+        const touch = event.changedTouches[0];
+        if (touch && touchStartY !== null) lastTouchY = touch.clientY;
+      },
+      { passive: true },
+    );
+
+    window.addEventListener('touchend', (event) => {
+      const touch = event.changedTouches[0];
+      if (touch && touchStartY !== null) lastTouchY = touch.clientY;
+      monitorUntil = performance.now() + MONITOR_MS;
+    });
   }
 
   private setCurrentPage(pageNumber: number): void {
@@ -112,11 +166,25 @@ export class FlipbookReader {
     }
   }
 
-  private async renderPage(pageNumber: number): Promise<void> {
-    if (this.rendered.has(pageNumber)) return;
+  // renderAround can be called again before the previous call finishes, so the same page may
+  // be requested twice while still rendering — pdf.js throws on a second concurrent render()
+  // on one canvas, so in-flight renders are tracked and reused instead of started twice.
+  private renderPage(pageNumber: number): Promise<void> {
+    if (this.rendered.has(pageNumber)) return Promise.resolve();
+    const inFlight = this.renderTasks.get(pageNumber);
+    if (inFlight) return inFlight;
+
     const canvas = this.canvases.get(pageNumber);
-    if (!canvas) return;
-    await renderPageToCanvas(this.doc, pageNumber, canvas, RENDER_SCALE);
-    this.rendered.add(pageNumber);
+    if (!canvas) return Promise.resolve();
+
+    const task = renderPageToCanvas(this.doc, pageNumber, canvas, RENDER_SCALE)
+      .then(() => {
+        this.rendered.add(pageNumber);
+      })
+      .finally(() => {
+        this.renderTasks.delete(pageNumber);
+      });
+    this.renderTasks.set(pageNumber, task);
+    return task;
   }
 }

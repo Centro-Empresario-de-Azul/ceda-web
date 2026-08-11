@@ -1,17 +1,6 @@
 // Derives every brand raster from CEDA's HD masters in src/assets/brand.
-//
 // Run: node scripts/prepare-logo.mjs
-//
-// Two logo variants exist on purpose:
-//   logo.png        full colour, referenced only by the JSON-LD schema, so search
-//                   engines get true brand colour. Visitors never download it.
-//   logo-white.png  the flat white silhouette the navy nav and footer actually render.
-//                   Being single-colour it compresses to a fraction of the colour file,
-//                   and it avoids the `brightness-0 invert` filter entirely.
-//
-// Note: passing `effort` to sharp's png() implicitly enables palette mode, which
-// quantises to 256 colours and bands the gradient swoosh. Colour output must pass
-// `palette: false` explicitly.
+// logo.png is full colour (JSON-LD only); logo-white.png is the flat silhouette the nav/footer render.
 
 import sharp from 'sharp';
 import { fileURLToPath } from 'node:url';
@@ -20,6 +9,7 @@ import { dirname, join } from 'node:path';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const src = (f) => join(root, 'src/assets/brand', f);
 const out = (f) => join(root, 'public/img', f);
+// palette: false — sharp's `effort` option implicitly enables palette mode, banding the gradient.
 const PNG = { compressionLevel: 9, palette: false };
 
 const report = [];

@@ -1,14 +1,6 @@
-// Prepares an issue of Revista Imagen CEDA for the web: compresses the PDF and extracts
-// its cover.
-//
-// Usage: node scripts/prepare-magazine.mjs <source.pdf> <issue-number>
-//   e.g. node scripts/prepare-magazine.mjs ~/Downloads/11179.pdf 316
-//
-// The magazine is exported from CorelDRAW with images stored losslessly, which puts a
-// 22-page issue at ~58MB — minutes of download on mobile data. Ghostscript re-encodes the
-// images while leaving text as vector, so it stays selectable and searchable at ~2.5MB.
-//
-// Requires ghostscript: brew install ghostscript
+// Compresses a Revista Imagen CEDA issue and extracts its cover. Losslessly-exported
+// CorelDRAW PDFs run ~58MB; ghostscript re-encodes images but keeps text vector, ~2.5MB.
+// Usage: node scripts/prepare-magazine.mjs <source.pdf> <issue-number> (requires ghostscript)
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, statSync } from 'node:fs';

@@ -11,16 +11,9 @@
     "command": "npm run build",
   },
 
-  // Custom domain, ready to enable. Keep commented until ceda.org.ar is delegated to
-  // Cloudflare and the zone appears in the account — `wrangler deploy` creates the domain
-  // through the API, so it fails on a zone it cannot find, which would break the deploy
-  // that currently works. Once the zone is live, uncomment and deploy; Cloudflare creates
-  // the DNS record and certificate itself, so no manual record is needed.
-  //
-  // Only www is listed. The apex redirects to www via a Cloudflare Redirect Rule, which
-  // is terminating and runs ahead of Workers, so apex traffic never reaches this Worker.
-  // The apex still needs a proxied DNS record for that rule to have something to match.
-  //
+  // Custom domain, ready to enable once ceda.org.ar is delegated to Cloudflare — `wrangler
+  // deploy` creates the domain via the API, so it fails on a zone it can't find yet. Only
+  // www is listed; the apex redirects to www via a Cloudflare Redirect Rule ahead of Workers.
   // "routes": [
   //   { "pattern": "www.ceda.org.ar", "custom_domain": true }
   // ],

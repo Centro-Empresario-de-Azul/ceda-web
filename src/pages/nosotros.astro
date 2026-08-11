@@ -171,21 +171,26 @@ import { advocacy } from '../data/advocacy';
 
     <ol class="mt-12 space-y-px overflow-hidden rounded-2xl border border-sky-2 bg-sky-2">
       {
-        advocacy.map((g) => (
-          <li class="bg-white p-7 md:flex md:gap-8">
-            <p class="eyebrow shrink-0 text-orange-deep md:w-20 md:pt-1">{g.year}</p>
-            <div class="mt-3 md:mt-0">
-              <h3 class="text-xl leading-tight text-navy">{g.title}</h3>
-              <p class="mt-3 leading-relaxed text-muted">{g.body}</p>
-              <ExternalLink
-                href={g.source.href}
-                class="link-underline mt-3 inline-block text-sm text-muted"
-              >
-                Fuente: {g.source.label}
-              </ExternalLink>
-            </div>
-          </li>
-        ))
+        advocacy.map((g) => {
+          // source.href can be an internal path (e.g. the magazine, /revista) rather than an
+          // external citation — only external ones should open in a new tab.
+          const SourceLink = g.source.href.startsWith('/') ? 'a' : ExternalLink;
+          return (
+            <li class="bg-white p-7 md:flex md:gap-8">
+              <p class="eyebrow shrink-0 text-orange-deep md:w-20 md:pt-1">{g.year}</p>
+              <div class="mt-3 md:mt-0">
+                <h3 class="text-xl leading-tight text-navy">{g.title}</h3>
+                <p class="mt-3 leading-relaxed text-muted">{g.body}</p>
+                <SourceLink
+                  href={g.source.href}
+                  class="link-underline mt-3 inline-block text-sm text-muted"
+                >
+                  Fuente: {g.source.label}
+                </SourceLink>
+              </div>
+            </li>
+          );
+        })
       }
     </ol>
   </section>

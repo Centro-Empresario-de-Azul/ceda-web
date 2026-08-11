@@ -97,6 +97,10 @@ const { issue } = Astro.props;
     import { SearchIndex } from '../../lib/reader/search-index';
     import { ZoomLightbox } from '../../lib/reader/zoom-lightbox';
 
+    // Reader interactions fire promises without awaiting them (the click/input handler
+    // can't be async-blocking), so failures need an explicit sink instead of going unhandled.
+    const reportError = (context: string) => (err: unknown) => console.error(context, err);
+
     async function boot(): Promise<void> {
       const container = document.getElementById('reader-container');
       const errorEl = document.getElementById('reader-error');
@@ -122,7 +126,7 @@ const { issue } = Astro.props;
 
         pageInput.addEventListener('change', () => {
           const page = Number(pageInput.value);
-          if (Number.isInteger(page)) void reader.goToPage(page);
+          if (Number.isInteger(page)) reader.goToPage(page).catch(reportError('goToPage failed'));
         });
 
         const lightboxRoot = document.getElementById('reader-zoom-lightbox');
@@ -132,7 +136,7 @@ const { issue } = Astro.props;
             reader.setGesturesEnabled(!open),
           );
           zoomButton.addEventListener('click', () => {
-            void lightbox.open(doc, reader.getCurrentPage());
+            lightbox.open(doc, reader.getCurrentPage()).catch(reportError('Zoom open failed'));
           });
         }
 
@@ -140,7 +144,7 @@ const { issue } = Astro.props;
         const searchInput = document.getElementById('reader-search') as HTMLInputElement | null;
         const resultsList = document.getElementById('reader-search-results');
         searchInput?.addEventListener('input', () => {
-          void (async () => {
+          (async () => {
             await searchIndex.whenReady();
             const results = searchIndex.search(searchInput.value);
             if (!resultsList) return;
@@ -154,11 +158,13 @@ const { issue } = Astro.props;
               button.type = 'button';
               button.textContent = `Página ${result.page}: ${result.snippet}`;
               button.className = 'w-full cursor-pointer text-left hover:text-navy';
-              button.addEventListener('click', () => void reader.goToPage(result.page));
+              button.addEventListener('click', () =>
+                reader.goToPage(result.page).catch(reportError('goToPage failed')),
+              );
               li.appendChild(button);
               resultsList.appendChild(li);
             }
-          })();
+          })().catch(reportError('Search failed'));
         });
       } catch {
         // Replace the reader with the message rather than leaving dead controls beside an

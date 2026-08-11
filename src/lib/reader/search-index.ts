@@ -9,13 +9,17 @@ const SNIPPET_RADIUS = 40;
 
 export class SearchIndex {
   private pageText = new Map<number, string>();
-  private ready: Promise<void>;
+  private ready: Promise<void> | null = null;
 
-  constructor(doc: PdfDocument, pageCount: number) {
-    this.ready = this.build(doc, pageCount);
-  }
+  constructor(
+    private doc: PdfDocument,
+    private pageCount: number,
+  ) {}
 
-  async whenReady(): Promise<void> {
+  // Deferred until first use rather than started in the constructor: most visits to the
+  // reader never touch search, so extracting text from every page shouldn't be unconditional.
+  whenReady(): Promise<void> {
+    if (!this.ready) this.ready = this.build();
     return this.ready;
   }
 
@@ -38,12 +42,15 @@ export class SearchIndex {
     return results.sort((a, b) => a.page - b.page);
   }
 
-  private async build(doc: PdfDocument, pageCount: number): Promise<void> {
-    // Text extraction parses content streams without rasterizing, so it's cheap enough to
-    // run for every page in the background — unlike canvas rendering, it isn't lazy.
-    for (let n = 1; n <= pageCount; n += 1) {
-      const text = await getPageText(doc, n);
-      this.pageText.set(n, text);
+  private async build(): Promise<void> {
+    // One page's extraction failing (e.g. a malformed content stream) shouldn't disable
+    // search for the rest of the issue — skip it and keep going.
+    for (let n = 1; n <= this.pageCount; n += 1) {
+      try {
+        this.pageText.set(n, await getPageText(this.doc, n));
+      } catch (err) {
+        console.error(`SearchIndex: failed to extract text from page ${n}`, err);
+      }
     }
   }
 }

@@ -11,10 +11,8 @@ interface Props {
 }
 const { event, detailed = false } = Astro.props;
 
-// Scoped to events/ deliberately. An eager glob *imports* everything it matches, so a
-// wider pattern emits every jpg under assets/img into the build — including images no
-// page references. A missing file is a build-time failure with the path named, rather
-// than a silent undefined.
+// Scoped to events/ deliberately: eager glob *imports* everything it matches, so a wider
+// pattern would ship every jpg under assets/img, referenced or not.
 const posters = import.meta.glob<{ default: ImageMetadata }>('../assets/img/events/**/*.jpg', {
   eager: true,
 });

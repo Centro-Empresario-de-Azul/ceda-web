@@ -1,8 +1,5 @@
-// Builds the Open Graph card from CEDA's own assets: navy field, the slash band, and a
-// white silhouette of the logo. Deliberately text-free — no font rendering means the
-// output is identical on any machine.
-//
-// Run: node scripts/generate-og.mjs
+// Builds the Open Graph card from CEDA's own assets. Deliberately text-free — no font
+// rendering means the output is identical on any machine. Run: node scripts/generate-og.mjs
 
 import sharp from 'sharp';
 import { fileURLToPath } from 'node:url';

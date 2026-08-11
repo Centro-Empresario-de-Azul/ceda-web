@@ -1,7 +1,6 @@
-// Issues of Revista Imagen CEDA, newest first.
-//
-// To add one: run `node scripts/prepare-magazine.mjs <source.pdf> <number>`, then prepend
-// an entry here. `cover` must match a file in src/assets/magazine/.
+// Issues of Revista Imagen CEDA, newest first. To add one: run
+// `node scripts/prepare-magazine.mjs <source.pdf> <number>`, then prepend an entry here;
+// `cover` must match a file in src/assets/magazine/.
 
 import { z } from 'zod';
 
@@ -26,8 +25,16 @@ export const issues = z
   // Newest first — the page takes issues[0] as the featured edition and groups the rest.
   .array(issueSchema)
   .nonempty()
-  .refine((list) => list.every((issue, i) => i === 0 || list[i - 1].iso >= issue.iso), {
-    message: 'issues must be ordered newest first by `iso`',
+  .superRefine((list, ctx) => {
+    for (let i = 1; i < list.length; i += 1) {
+      if (list[i - 1].iso < list[i].iso) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'issues must be ordered newest first by `iso`',
+          path: [i, 'iso'],
+        });
+      }
+    }
   })
   .parse([
     {
