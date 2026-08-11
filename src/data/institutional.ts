@@ -14,7 +14,24 @@ const seatSchema = z.object({
   names: z.array(z.string().min(1)).nonempty(),
 });
 
-export const subcommittees = [
+const subcommitteeSchema = z.object({
+  name: z.string().min(1),
+  /** The subcomisión's motto, when it has one distinct from its name. */
+  motto: z.string().min(1).optional(),
+  body: z.string().min(1),
+});
+
+const officerSchema = z.object({
+  role: z.string().min(1),
+  name: z.string().min(1),
+});
+
+const agendaItemSchema = z.object({
+  title: z.string().min(1),
+  body: z.string().min(1),
+});
+
+export const subcommittees = z.array(subcommitteeSchema).parse([
   {
     // "Jóvenes en Movimiento" is the subcomisión's motto, not its name.
     name: 'Subcomisión de Jóvenes',
@@ -26,23 +43,23 @@ export const subcommittees = [
     body: 'Trabaja en la puesta en valor del centro de Azul junto al municipio y en línea con la iniciativa de CAME. El proyecto tiene gerenta propia, Lorena Triviño, y una primera etapa de intervención sobre las calles Yrigoyen y San Martín.',
   },
   {
-    // CEDA does not sit on the Ente Mixto de Turismo; its role is articulating the private
+    // CEDA does not sit on el Ente Mixto de Turismo; its role is articulating the private
     // side of the offer. Worded to state that positively, without claiming membership.
     name: 'CEDA Turismo',
     body: 'Articula la oferta turística de Azul para que funcione de manera integrada: hoteles, gastronomía, agencias de viaje y prestadores de servicios, junto al comercio local.',
   },
-];
+]);
 
 // Officers of Fundación CEDA — a separate legal entity from CEDA, with its own
 // leadership. Ramiro Layús presides it while also serving as CEDA's secretario.
-export const foundationOfficers = [
+export const foundationOfficers = z.array(officerSchema).parse([
   { role: 'Presidente', name: 'Ramiro Layús' },
   { role: 'Secretario administrativo', name: 'Gastón Mocciaro' },
   { role: 'Contadora', name: 'Silvina Giorgetti' },
-];
+]);
 
 // Working lines the Fundación set out with the Municipality and local institutions.
-export const foundationAgenda = [
+export const foundationAgenda = z.array(agendaItemSchema).parse([
   {
     title: 'Azul, Ciudad Parque',
     body: 'Integrar el desarrollo urbano con el entorno natural, con un modelo sostenible centrado en la calidad de vida de la comunidad.',
@@ -55,17 +72,20 @@ export const foundationAgenda = [
     title: 'Plan Estratégico de Azul',
     body: 'Retomar y actualizar el plan junto a las instituciones de la ciudad, con la mirada puesta en el Bicentenario de Azul en 2032.',
   },
-];
+]);
 
 // From the Fundación's own roll-up banner.
-export const foundationMembers = [
-  site.name,
-  'Sociedad Rural de Azul',
-  'Cooperativa Farmacéutica Ltda.',
-  'Cooperativa Eléctrica de Azul Ltda.',
-  'Banco Industrial',
-  'Municipalidad de Azul',
-];
+export const foundationMembers = z
+  .array(z.string().min(1))
+  .nonempty()
+  .parse([
+    site.name,
+    'Sociedad Rural de Azul',
+    'Cooperativa Farmacéutica Ltda.',
+    'Cooperativa Eléctrica de Azul Ltda.',
+    'Banco Industrial',
+    'Municipalidad de Azul',
+  ]);
 
 /* Benefits as published in Revista Imagen CEDA N.º 316. Only list — the home page teaser
    derives from `featured` below; a hardcoded teaser once kept advertising retracted ones. */

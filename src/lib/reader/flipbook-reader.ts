@@ -10,6 +10,7 @@ const KEEP_RADIUS = 3;
 export class FlipbookReader {
   private pageFlip: PageFlip;
   private rendered = new Set<number>();
+  private renderTasks = new Map<number, Promise<void>>();
   private canvases = new Map<number, HTMLCanvasElement>();
   private currentPage = 1;
   private pageListeners: ((page: number) => void)[] = [];
@@ -53,7 +54,9 @@ export class FlipbookReader {
     // PDF pages are already numbered everywhere else in this codebase (issue.pages, etc).
     this.pageFlip.on('flip', (event) => {
       this.setCurrentPage((event.data as number) + 1);
-      void this.renderAround(this.currentPage);
+      this.renderAround(this.currentPage).catch((err: unknown) =>
+        console.error('FlipbookReader: render around page', this.currentPage, 'failed', err),
+      );
     });
 
     await this.renderAround(1);
@@ -69,6 +72,7 @@ export class FlipbookReader {
   }
 
   async goToPage(pageNumber: number): Promise<void> {
+    if (!Number.isFinite(pageNumber)) return;
     const target = Math.min(Math.max(Math.trunc(pageNumber), 1), this.pageCount);
     await this.renderAround(target);
     this.pageFlip.turnToPage(target - 1);
@@ -162,11 +166,25 @@ export class FlipbookReader {
     }
   }
 
-  private async renderPage(pageNumber: number): Promise<void> {
-    if (this.rendered.has(pageNumber)) return;
+  // renderAround can be called again before the previous call finishes, so the same page may
+  // be requested twice while still rendering — pdf.js throws on a second concurrent render()
+  // on one canvas, so in-flight renders are tracked and reused instead of started twice.
+  private renderPage(pageNumber: number): Promise<void> {
+    if (this.rendered.has(pageNumber)) return Promise.resolve();
+    const inFlight = this.renderTasks.get(pageNumber);
+    if (inFlight) return inFlight;
+
     const canvas = this.canvases.get(pageNumber);
-    if (!canvas) return;
-    await renderPageToCanvas(this.doc, pageNumber, canvas, RENDER_SCALE);
-    this.rendered.add(pageNumber);
+    if (!canvas) return Promise.resolve();
+
+    const task = renderPageToCanvas(this.doc, pageNumber, canvas, RENDER_SCALE)
+      .then(() => {
+        this.rendered.add(pageNumber);
+      })
+      .finally(() => {
+        this.renderTasks.delete(pageNumber);
+      });
+    this.renderTasks.set(pageNumber, task);
+    return task;
   }
 }
