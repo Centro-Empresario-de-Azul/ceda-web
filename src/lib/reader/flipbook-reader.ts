@@ -44,6 +44,13 @@ export class FlipbookReader {
       const canvas = document.createElement('canvas');
       canvas.className = 'reader-page-canvas';
       pageEl.appendChild(canvas);
+
+      // The source scans carry no folio — overlay it, since it's the same on every issue.
+      const pageNumberEl = document.createElement('span');
+      pageNumberEl.className = 'reader-page-number';
+      pageNumberEl.textContent = String(n);
+      pageEl.appendChild(pageNumberEl);
+
       this.canvases.set(n, canvas);
       pageElements.push(pageEl);
     }

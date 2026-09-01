@@ -1,5 +1,5 @@
 #!/bin/sh
-# Fast gate: lint + types. Runs on every commit, so it must stay quick.
+# Fast gate: lint + types + unit tests. Runs on every commit, so it must stay quick.
 # Installed automatically by the `prepare` script (git config core.hooksPath .githooks).
 set -e
 
@@ -18,6 +18,12 @@ npx eslint . || {
 echo "→ astro check"
 npx astro check || {
   echo "✗ Type check failed."
+  exit 1
+}
+
+echo "→ vitest"
+npx vitest run || {
+  echo "✗ Tests failed."
   exit 1
 }
 
