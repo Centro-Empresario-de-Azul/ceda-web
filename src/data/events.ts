@@ -34,17 +34,17 @@ export type CedaEvent = z.infer<typeof eventSchema>;
 
 export const events = z.array(eventSchema).parse([
   {
-    title: 'Jornada de Transformación Digital',
+    title: 'Jornada de Comercio Digital',
     tagline: 'Inspirate, aprendé, conectá',
-    body: 'Una tarde para descubrir herramientas digitales, escuchar experiencias reales y compartir ideas para hacer crecer tu negocio. Abierta a todo el público.',
-    startISO: '2026-08-29T16:00:00-03:00',
-    endISO: '2026-08-29T20:00:00-03:00',
+    body: 'Una tarde para descubrir herramientas digitales, escuchar experiencias reales y compartir ideas que te ayudarán a hacer crecer tu negocio.',
+    startISO: '2026-08-29T15:00:00-03:00',
+    endISO: '2026-08-29T18:30:00-03:00',
     dateLabel: '29 de agosto',
-    timeLabel: '16:00 a 20:00',
+    timeLabel: '15:00 a 18:30',
     venue: 'Auditorio del Consejo Profesional de Ciencias Económicas',
     address: 'Av. Perón 800, Azul',
-    topics: ['Comercio digital', 'E-commerce', 'Marketing', 'Herramientas de e-commerce'],
-    poster: 'events/jtd-2026.jpg',
+    topics: ['E-commerce', 'Publicidad audiovisual', 'Marketing y redes sociales', 'Logística'],
+    poster: 'events/jcd-2026.jpg',
     organiser: 'Subcomisión de Jóvenes',
   },
 ]);

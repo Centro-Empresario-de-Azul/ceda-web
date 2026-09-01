@@ -27,7 +27,7 @@ const { issue } = Astro.props;
         type="search"
         id="reader-search"
         placeholder="Buscar en esta edición…"
-        class="rounded-full border border-sky-2 px-4 py-2 text-sm"
+        class="w-full rounded-full border border-sky-2 px-4 py-2 text-sm sm:w-72"
         aria-label="Buscar en esta edición"
       />
 
@@ -51,7 +51,9 @@ const { issue } = Astro.props;
       </div>
     </div>
 
-    <ul id="reader-search-results" class="mb-4 hidden space-y-1 text-sm text-muted"></ul>
+    <div id="reader-search-results-wrap" class="search-results-wrap">
+      <ul id="reader-search-results" class="space-y-1 text-sm text-muted"></ul>
+    </div>
 
     <div
       id="reader-container"
@@ -94,7 +96,7 @@ const { issue } = Astro.props;
   <script>
     import { loadPdf, getPageCount } from '../../lib/reader/pdf-engine';
     import { FlipbookReader } from '../../lib/reader/flipbook-reader';
-    import { SearchIndex } from '../../lib/reader/search-index';
+    import { SearchIndex, MIN_QUERY_LENGTH } from '../../lib/reader/search-index';
     import { ZoomLightbox } from '../../lib/reader/zoom-lightbox';
 
     // Reader interactions fire promises without awaiting them (the click/input handler
@@ -142,14 +144,21 @@ const { issue } = Astro.props;
 
         const searchIndex = new SearchIndex(doc, pageCount);
         const searchInput = document.getElementById('reader-search') as HTMLInputElement | null;
+        const resultsWrap = document.getElementById('reader-search-results-wrap');
         const resultsList = document.getElementById('reader-search-results');
         searchInput?.addEventListener('input', () => {
           (async () => {
+            if (!resultsList) return;
+            if (searchInput.value.trim().length < MIN_QUERY_LENGTH) {
+              resultsList.innerHTML = '';
+              resultsWrap?.classList.remove('is-open');
+              return;
+            }
+
             await searchIndex.whenReady();
             const results = searchIndex.search(searchInput.value);
-            if (!resultsList) return;
             resultsList.innerHTML = '';
-            resultsList.classList.toggle('hidden', results.length === 0);
+            resultsWrap?.classList.toggle('is-open', results.length > 0);
             for (const result of results) {
               const li = document.createElement('li');
               // A button, not a click handler on the <li>: natively focusable and
@@ -172,10 +181,37 @@ const { issue } = Astro.props;
         errorEl?.classList.remove('hidden');
         container.classList.add('hidden');
         controls?.classList.add('hidden');
-        document.getElementById('reader-search-results')?.classList.add('hidden');
+        document.getElementById('reader-search-results-wrap')?.classList.remove('is-open');
       }
     }
 
     void boot();
   </script>
+
+  <style>
+    .search-results-wrap {
+      display: grid;
+      grid-template-rows: 0fr;
+      opacity: 0;
+    }
+
+    .search-results-wrap.is-open {
+      grid-template-rows: 1fr;
+      opacity: 1;
+      margin-bottom: 1rem;
+    }
+
+    .search-results-wrap > ul {
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .search-results-wrap {
+        transition:
+          grid-template-rows 0.25s ease,
+          opacity 0.2s ease;
+      }
+    }
+  </style>
 </Base>
