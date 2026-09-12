@@ -16,6 +16,33 @@ const entrySchema = z.object({
 
 const entries = z.array(entrySchema).parse([
   {
+    title: 'Constitución del Ente Municipal de Turismo (EMTUR)',
+    date: '2026-08-12',
+    body: 'En la sede del CEDA se realizó la primera reunión constitutiva del Ente de Turismo local, con la participación de representantes públicos y privados del sector: el Municipio, el Concejo Deliberante, el Colegio de Profesionales en Turismo y referentes de alojamiento y de actividades turísticas complementarias.',
+    source: {
+      label: 'Revista Imagen CEDA N.º 318, septiembre 2026',
+      href: '/revista',
+    },
+  },
+  {
+    title: 'Reclamo por la autovía de la Ruta 3',
+    date: '2026-08-09',
+    body: 'Vecinos autoconvocados se manifestaron en el acceso a Azul, sobre la Ruta Nacional N.º 3 y Av. Piazza, para reclamar el avance de la obra de la autovía. El CEDA continúa acompañando el reclamo.',
+    source: {
+      label: 'Revista Imagen CEDA N.º 317, agosto 2026',
+      href: '/revista',
+    },
+  },
+  {
+    title: 'Mesa de Seguimiento del Proyecto Ciudad Parque',
+    date: '2026-07-07',
+    body: 'La Fundación CEDA formalizó la Mesa de Seguimiento del Proyecto Ciudad Parque, un espacio de trabajo permanente que se reunirá mensualmente para avanzar en la planificación, el análisis y el seguimiento de las distintas etapas de la iniciativa.',
+    source: {
+      label: 'Revista Imagen CEDA N.º 317, agosto 2026',
+      href: '/revista',
+    },
+  },
+  {
     title: '2.ª Ronda de Negocios',
     date: '2026-04-10',
     body: 'CEDA organizó la segunda Ronda de Negocios multisectorial en la Sociedad Rural de Azul, con alrededor de cien inscriptos. Acompañaron CAME, FEBA, la Cooperativa Eléctrica de Azul y el Municipio.',
