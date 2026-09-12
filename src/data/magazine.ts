@@ -38,6 +38,15 @@ export const issues = z
   })
   .parse([
     {
+      number: 318,
+      date: 'Septiembre 2026',
+      iso: '2026-09',
+      headline: 'Septiembre, un CEDA generando encuentros y oportunidades',
+      pages: 21,
+      pdf: '/revista/imagen-ceda-318-web.pdf',
+      cover: 'cover-318.jpg',
+    },
+    {
       number: 317,
       date: 'Agosto 2026',
       iso: '2026-08',

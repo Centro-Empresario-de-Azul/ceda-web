@@ -159,6 +159,29 @@ export const benefits = z.array(benefitSchema).parse([
 /** The handful named on the home page. Never a second copy of the text. */
 export const featuredBenefits = benefits.filter((b) => b.featured);
 
+// The institution's first board, 1917, under its founding name (site.foundingName).
+export const foundingBoardTitle = '1.ª Comisión Directiva (1917)';
+
+export const foundingBoard = z.array(seatSchema).parse([
+  { role: 'Presidente', names: ['Constantino Fernández'] },
+  { role: 'Vicepresidente', names: ['Laureano Lobato'] },
+  { role: 'Secretario', names: ['Ruperto Campos'] },
+  { role: 'Prosecretario', names: ['Juan P. Torras'] },
+  { role: 'Tesorero', names: ['Pedro Gorostiza'] },
+  { role: 'Protesorero', names: ['Almanzor de Antueno'] },
+  {
+    role: 'Consejales',
+    names: [
+      'Agustín L. Mendieta',
+      'Juan B. Italiani',
+      'José A. Motti',
+      'Francisco T. Carmuega',
+      'Gregorio L. Motti',
+    ],
+  },
+  { role: 'Gerente', names: ['Albino T. Díaz'] },
+]);
+
 // Comisión Directiva 2026, as printed in Revista Imagen CEDA N.º 316 (julio 2026).
 export const boardTitle = 'Comisión Directiva 2026';
 
