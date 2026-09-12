@@ -16,6 +16,8 @@ import {
   foundationAgenda,
   board,
   boardTitle,
+  foundingBoard,
+  foundingBoardTitle,
 } from '../data/institutional';
 import { advocacy } from '../data/advocacy';
 ---
@@ -44,6 +46,20 @@ import { advocacy } from '../data/advocacy';
           A lo largo de más de un siglo la institución cambió de nombre y de sede, hasta convertirse
           hacia mediados del siglo XX en el {site.name} que funciona hoy en {site.street}.
         </p>
+
+        <h3 class="eyebrow mt-2 text-orange-deep">{foundingBoardTitle}</h3>
+        <dl class="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
+          {
+            foundingBoard.map((seat) => (
+              <div class="border-l-2 border-sky-2 pl-4">
+                <dt class="eyebrow text-muted">{seat.role}</dt>
+                <dd class="mt-1 text-base leading-snug font-semibold text-navy">
+                  {seat.names.join(' · ')}
+                </dd>
+              </div>
+            ))
+          }
+        </dl>
       </div>
     </div>
   </section>
