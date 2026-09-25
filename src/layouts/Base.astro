@@ -135,11 +135,7 @@ const schema = {
 
     <header class="sticky top-0 z-50 bg-navy shadow-[0_1px_0_rgba(255,255,255,0.12)]">
       <nav class="mx-auto flex max-w-6xl items-center gap-4 px-5 py-3" aria-label="Principal">
-        <a
-          href="/"
-          class:list={['flex shrink-0 items-center', path === '/' && 'nav-logo-reveal']}
-          aria-label={`${site.name} — inicio`}
-        >
+        <a href="/" class="flex shrink-0 items-center" aria-label={`${site.name} — inicio`}>
           <img
             src="/img/logo-white.png"
             alt={site.name}

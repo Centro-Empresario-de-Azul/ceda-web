@@ -59,7 +59,6 @@ Casi todo el texto vive en módulos, no en el markup.
 | Gestiones ante el municipio          | `src/data/advocacy.ts`      |
 | Ediciones de la revista              | `src/data/magazine.ts`      |
 | Charlas y jornadas                   | `src/data/events.ts`        |
-| Proyectos destacados en el inicio    | `src/data/programs.ts`      |
 | Textos de una página puntual         | `src/pages/<página>.astro`  |
 | Fotos                                | `src/assets/img/`           |
 
@@ -163,7 +162,7 @@ redirigir con 301 al definitivo, así no se pierden los links compartidos ni lo 
 ```text
 src/
   data/          Contenido en módulos tipados y validados con Zod
-                 (institutional · advocacy · magazine · events · programs)
+                 (institutional · advocacy · magazine · events)
   layouts/       Base.astro — head, nav, footer, schema
   components/    SlashBand · MarkerCircle · PageHero · SectionHeader · ContactBand
                  BusinessDirectory · ExternalLink · EventFeature · IssueCard

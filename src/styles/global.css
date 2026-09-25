@@ -149,11 +149,22 @@
     background: rgb(255 255 255 / 0.12);
   }
 
-  /* On the home page the hero already carries the logo, so the nav mark stays out of the
-     way until the reader scrolls past it. Falls back to permanently visible wherever
-     scroll-driven animation is unsupported, so the logo is never lost. */
-  .nav-logo-reveal {
-    opacity: 1;
+  /* Outline button for light backgrounds — .btn-secondary is its counterpart on navy. */
+  .btn-outline {
+    display: inline-block;
+    border-radius: 9999px;
+    border: 1.5px solid var(--color-navy);
+    color: var(--color-navy);
+    font-weight: 600;
+    padding: 0.8rem 1.65rem;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .btn-outline:hover {
+    background: var(--color-navy);
+    color: #fff;
   }
 
   /* The one card surface. Lifts on hover only when it is (or holds) a link, so static
@@ -264,8 +275,9 @@
 /* Scroll-driven reveal, native — no animation library. */
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
-    /* Longhands, deliberately — see the note on .nav-logo-reveal below. A shorthand here
-       gets folded into `animation: ... view()`, which is invalid and silently dropped. */
+    /* Longhands, deliberately — the minifier folds an `animation` shorthand plus
+       `animation-timeline` into `animation: ... view()`, which is invalid (the shorthand
+       resets the timeline but cannot set it) and gets dropped entirely. */
     .reveal {
       animation-name: reveal-in;
       animation-duration: auto;
@@ -275,49 +287,16 @@
       animation-range: entry 0% entry 45%;
     }
   }
-
-  @supports (animation-timeline: scroll()) {
-    /* Longhands, deliberately — the minifier folds an `animation` shorthand plus
-       `animation-timeline` into `animation: ... scroll(root)`, which is invalid (the
-       shorthand resets the timeline but cannot set it) and gets dropped entirely. */
-    .nav-logo-reveal {
-      animation-name: nav-logo-in;
-      animation-duration: auto;
-      animation-timing-function: linear;
-      animation-fill-mode: both;
-      animation-timeline: scroll(root block);
-      animation-range: 32px 200px;
-    }
-  }
-}
-
-/* Revealing it on keyboard focus keeps it from being an invisible tab stop. Unlayered on
-   purpose: inside @layer components it loses to the unlayered animation above. */
-.nav-logo-reveal:focus-visible {
-  animation: none;
-  opacity: 1;
 }
 
 /* Scroll-driven animations never advance without a scroll, so anything relying on them is
    invisible when printed, captured full-page, or rendered by a tool that does not scroll.
    Force the finished state. */
 @media print {
-  .reveal,
-  .nav-logo-reveal {
+  .reveal {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
-  }
-}
-
-@keyframes nav-logo-in {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
   }
 }
 

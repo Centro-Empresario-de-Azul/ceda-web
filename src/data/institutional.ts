@@ -213,6 +213,21 @@ export const historySources = z.array(z.object({ label: z.string().min(1), href:
   },
 ]);
 
+// From the founding date and the sources in historySources.
+export const historyMilestones = z
+  .array(z.object({ year: z.string().min(1), text: z.string().min(1) }))
+  .nonempty()
+  .parse([
+    { year: String(site.founded), text: `Se funda la ${site.foundingName}.` },
+    { year: '1930', text: 'La Liga funciona en Av. 25 de Mayo 733.' },
+    {
+      year: '1952',
+      text: 'Se la conoce como Centro de Comerciantes, Industriales y Propietarios de Azul.',
+    },
+    { year: '1980', text: `Ya lleva el nombre de ${site.name}.` },
+    { year: 'Hoy', text: `Su sede está en ${site.street}.` },
+  ]);
+
 // The institution's first board, 1917, under its founding name (site.foundingName).
 export const foundingBoardTitle = '1.ª Comisión Directiva (1917)';
 

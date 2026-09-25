@@ -6,320 +6,348 @@ import SlashBand from '../components/SlashBand.astro';
 import MarkerCircle from '../components/MarkerCircle.astro';
 import SectionHeader from '../components/SectionHeader.astro';
 import ExternalLink from '../components/ExternalLink.astro';
-import ContactBand from '../components/ContactBand.astro';
-import { site, address, affiliationsProse, whatsappJoinUrl } from '../site';
-import heroImg from '../assets/img/reunion-turismo.jpg';
-import mesaImg from '../assets/img/reunion-juntos-es-mejor.jpg';
+import IssueCard from '../components/IssueCard.astro';
+import { site, affiliationsProse, whatsappJoinUrl } from '../site';
 import { upcoming } from '../data/events';
-import { initiatives } from '../data/programs';
-import { benefits, featuredBenefits, membership } from '../data/institutional';
+import { benefits, benefitTags, membership, historyMilestones } from '../data/institutional';
 import { advocacy } from '../data/advocacy';
-import { latest } from '../data/magazine';
+import { issues, latest } from '../data/magazine';
 import { coverFor } from '../lib/magazine-covers';
 import { posterFor } from '../lib/event-posters';
 import { yearsSince } from '../lib/stats';
 
-const recentAdvocacy = advocacy.slice(0, 3);
+const years = yearsSince(site.foundedISO, new Date());
+const latestCover = coverFor(latest.cover);
+const recentIssues = issues.slice(0, 6);
+const recentAdvocacy = advocacy.slice(0, 4);
+const benefitPreview = benefits.slice(0, 6);
+
 const monthYear = new Intl.DateTimeFormat('es-AR', {
   month: 'long',
   year: 'numeric',
   timeZone: 'UTC',
 });
-const cover = coverFor(latest.cover);
+const dayMonthYear = new Intl.DateTimeFormat('es-AR', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
 
-const stats = [
-  { figure: String(yearsSince(site.foundedISO, new Date())), label: 'años representando a Azul' },
-  { figure: String(latest.number), label: 'ediciones de la revista Imagen CEDA' },
-  { figure: String(benefits.length), label: 'beneficios para socios' },
-  { figure: String(advocacy.length), label: 'gestiones con registro público' },
+// What CEDA does, each pillar ending in something dated and real rather than a slogan.
+const latestAdvocacy = advocacy[0];
+const pillars = [
+  {
+    verb: 'Representa',
+    body: 'Lleva la voz de las empresas de Azul ante el municipio, el Concejo Deliberante y las entidades provinciales y nacionales.',
+    live: latestAdvocacy.title,
+    liveMeta: monthYear.format(new Date(latestAdvocacy.date)),
+    href: '/nosotros#gestiones',
+    cta: 'Ver gestiones',
+  },
+  upcoming
+    ? {
+        verb: 'Conecta',
+        body: 'Charlas, jornadas y encuentros para que las empresas de la ciudad se conozcan y hagan negocios.',
+        live: upcoming.title,
+        liveMeta: `${upcoming.dateLabel}, ${upcoming.timeLabel} h`,
+        href: '/programas',
+        cta: 'Ver la actividad',
+      }
+    : {
+        verb: 'Conecta',
+        body: 'Encuentros, rondas de negocios y la guía de comercios, oficios y servicios de Azul que arma la Subcomisión de Jóvenes.',
+        live: 'Guía de Azul',
+        liveMeta: 'Registrá tu negocio, es gratis',
+        href: '/programas',
+        cta: 'Conocé los programas',
+      },
+  {
+    verb: 'Informa',
+    body: `Imagen ${site.acronym}, nuestra revista digital: actualidad del comercio y la industria de Azul.`,
+    live: `N.º ${latest.number} · ${latest.headline}`,
+    liveMeta: latest.date,
+    href: `/revista/${latest.number}`,
+    cta: 'Leer online',
+  },
 ];
+
+const shadow = 'shadow-[0_24px_50px_-24px_rgba(13,27,54,0.55)]';
 ---
 
 <Base
   title={`${site.acronym} — ${site.name}`}
   description={`${site.description} Desde ${site.founded}.`}
 >
-  <section class="relative isolate overflow-hidden bg-navy">
-    <Image
-      src={heroImg}
-      alt="Reunión de la comisión directiva de CEDA en su sala de reuniones"
-      widths={[640, 1024, 1600, 2048]}
-      sizes="100vw"
-      loading="eager"
-      fetchpriority="high"
-      class="absolute inset-0 -z-10 h-full w-full object-cover object-center opacity-40"
-    />
+  {/* Hero: type-led, on light ground. CEDA's own printed material is the imagery. */}
+  <section class="relative overflow-hidden bg-sky">
     <div
-      class="absolute inset-0 -z-10 bg-[linear-gradient(105deg,var(--color-navy-ink)_18%,rgba(28,58,112,0.82)_55%,rgba(28,58,112,0.55)_100%)]"
-      aria-hidden="true"
+      class="mx-auto grid max-w-6xl items-center gap-14 px-5 pt-16 pb-24 md:pt-20 md:pb-28 lg:grid-cols-[1.25fr_1fr] lg:gap-10"
     >
-    </div>
-
-    <div class="mx-auto max-w-6xl px-5 pt-20 pb-24 md:pt-28 md:pb-32">
-      <p class="eyebrow text-orange-bright">{site.name} · desde {site.founded}</p>
-
-      <img
-        src="/img/logo-white.png"
-        alt=""
-        width="640"
-        height="183"
-        class="mt-6 w-[clamp(7rem,16vw,11rem)]"
-      />
-
-      <h1 class="display-tight mt-4 w-fit text-display text-white md:mt-2">
-        <MarkerCircle>Juntos es <br />mejor</MarkerCircle>
-      </h1>
-
-      <p class="mt-12 max-w-xl text-xl leading-relaxed text-sky-2 md:text-2xl">
-        <strong class="font-semibold text-white">Ningún negocio cambia una ciudad solo.</strong>{
-          ' '
-        }
-        Desde {site.founded}, el comercio, la industria y los servicios de Azul se organizan acá.
-      </p>
-
-      <div class="mt-10 flex flex-wrap gap-4">
-        <ExternalLink href={whatsappJoinUrl} class="btn-primary">
-          Sumate al {site.acronym}
-        </ExternalLink>
-        <a href="/beneficios" class="btn-secondary">Ver beneficios</a>
+      <div>
+        <p class="eyebrow text-orange-deep">
+          Cámara empresarial · {site.city} · desde {site.founded}
+        </p>
+        <h1 class="display-tight mt-6 text-display text-navy">
+          Juntos es <MarkerCircle>mejor</MarkerCircle>
+        </h1>
+        <p class="mt-8 max-w-xl text-xl leading-relaxed text-muted md:text-2xl">
+          El comercio, la industria y los servicios de {site.city}, organizados desde {
+            site.founded
+          }:{' '}
+          <strong class="font-semibold text-ink">{years} años gestionando</strong> ante el municipio y
+          <strong class="font-semibold text-ink">{latest.number} ediciones</strong> de nuestra revista.
+        </p>
+        <div class="mt-10 flex flex-wrap gap-4">
+          <a href="/beneficios#asociate" class="btn-primary">Asociate</a>
+          <ExternalLink href={site.whatsappUrl} class="btn-outline inline-flex items-center gap-2">
+            <Icon name="simple-icons:whatsapp" class="size-4" aria-hidden="true" />
+            Escribinos
+          </ExternalLink>
+        </div>
       </div>
-    </div>
 
-    <SlashBand height="h-3" class="absolute bottom-0 left-0" />
-  </section>
-
-  <section class="bg-sky py-16 md:py-24" aria-labelledby="ahora">
-    <div class="mx-auto max-w-6xl px-5">
-      <p id="ahora" class="eyebrow text-orange-deep">Ahora en el {site.acronym}</p>
-
-      <div class="mt-8 grid gap-5 lg:grid-cols-3">
+      <div class="relative mx-auto flex w-full max-w-md items-end justify-center gap-5 sm:gap-6">
         {
-          upcoming ? (
-            <a href="/programas" class="tile flex flex-col bg-navy text-white lg:row-span-2">
-              <p class="eyebrow text-orange-bright">Próxima actividad</p>
+          upcoming && (
+            <a href="/programas" class="w-1/2 -rotate-2 transition-transform hover:rotate-0">
               <Image
                 src={posterFor(upcoming.poster, upcoming.title)}
                 alt={`Afiche de ${upcoming.title}`}
-                widths={[320, 560]}
-                sizes="(max-width: 1024px) 80vw, 30vw"
-                loading="lazy"
-                class="mt-5 max-h-80 w-auto self-start rounded-xl"
+                widths={[240, 420]}
+                sizes="(max-width: 1024px) 45vw, 20vw"
+                loading="eager"
+                class:list={['w-full rounded-xl', shadow]}
               />
-              <h2 class="display-tight mt-6 text-3xl">{upcoming.title}</h2>
-              <p class="mt-3 flex items-start gap-2 text-sky-2">
-                <Icon name="lucide:calendar-days" class="mt-1 size-4 shrink-0" aria-hidden="true" />
-                <span>
-                  <time datetime={upcoming.startISO}>{upcoming.dateLabel}</time>,{' '}
-                  {upcoming.timeLabel} h · {upcoming.venue}
-                </span>
-              </p>
-              <span class="mt-auto inline-flex items-center gap-2 pt-6 font-semibold text-orange-bright">
-                Ver la actividad
-                <Icon name="lucide:arrow-right" class="size-5" aria-hidden="true" />
-              </span>
-            </a>
-          ) : (
-            <a href={`/revista/${latest.number}`} class="tile flex flex-col bg-white lg:row-span-2">
-              <p class="eyebrow text-orange-deep">Revista · N.º {latest.number}</p>
-              <Image
-                src={cover}
-                alt={`Tapa de Imagen ${site.acronym} número ${latest.number}, ${latest.date}`}
-                widths={[320, 560]}
-                sizes="(max-width: 1024px) 70vw, 28vw"
-                loading="lazy"
-                class="mt-5 w-3/5 self-center rounded-lg shadow-[0_18px_40px_-20px_rgba(28,58,112,0.6)] lg:w-4/5"
-              />
-              <h2 class="mt-6 text-2xl leading-tight text-navy">{latest.headline}</h2>
-              <span class="mt-auto inline-flex items-center gap-2 pt-6 font-semibold text-orange-deep">
-                Leer online
-                <Icon name="lucide:arrow-right" class="size-5" aria-hidden="true" />
+              <span class="mt-3 block text-sm font-semibold text-navy">
+                Próxima actividad · {upcoming.dateLabel}
               </span>
             </a>
           )
         }
-
-        <div class="tile bg-navy text-white lg:col-span-2">
-          <p class="eyebrow text-orange-bright">Lo que gestionamos</p>
-          <ul class="mt-5 divide-y divide-white/10">
-            {
-              recentAdvocacy.map((g) => (
-                <li class="py-4 first:pt-0">
-                  <p class="text-xs tracking-wide text-sky-2 uppercase">
-                    <time datetime={g.date}>{monthYear.format(new Date(g.date))}</time>
-                  </p>
-                  <h3 class="mt-1 text-xl leading-tight">{g.title}</h3>
-                </li>
-              ))
-            }
-          </ul>
-          <a
-            href="/nosotros#gestiones"
-            class="mt-2 inline-flex items-center gap-2 font-semibold text-orange-bright"
-          >
-            Ver todas las gestiones
-            <Icon name="lucide:arrow-right" class="size-5" aria-hidden="true" />
-          </a>
-        </div>
-
-        <a href="/beneficios#asociate" class="tile flex flex-col bg-orange-deep text-white">
-          <p class="eyebrow">Asociate</p>
-          <p class="stat-figure mt-4">{membership.fee}</p>
-          <p class="mt-1 text-white/85">{membership.feePeriod}</p>
-          <span class="mt-auto inline-flex items-center gap-2 pt-6 font-semibold">
-            Cómo sumarte
-            <Icon name="lucide:arrow-right" class="size-5" aria-hidden="true" />
+        <a
+          href={`/revista/${latest.number}`}
+          class:list={[
+            'rotate-2 transition-transform hover:rotate-0',
+            upcoming ? 'w-1/2' : 'w-3/4',
+          ]}
+        >
+          <Image
+            src={latestCover}
+            alt={`Tapa de Imagen ${site.acronym} número ${latest.number}, ${latest.date}`}
+            widths={[320, 560]}
+            sizes="(max-width: 1024px) 60vw, 28vw"
+            loading="eager"
+            fetchpriority="high"
+            class:list={['w-full rounded-xl', shadow]}
+          />
+          <span class="mt-3 block text-sm font-semibold text-navy">
+            Revista N.º {latest.number} · {latest.date}
           </span>
         </a>
+      </div>
+    </div>
+    <SlashBand height="h-3" class="absolute bottom-0 left-0" />
+  </section>
 
-        {
-          upcoming ? (
-            <a href={`/revista/${latest.number}`} class="tile flex items-center gap-5 bg-white">
-              <Image
-                src={cover}
-                alt=""
-                widths={[160, 240]}
-                sizes="96px"
-                loading="lazy"
-                class="w-24 shrink-0 rounded-md"
-              />
-              <span>
-                <span class="eyebrow block text-orange-deep">Revista · N.º {latest.number}</span>
-                <span class="mt-2 block font-semibold text-navy">{latest.headline}</span>
+  <section class="mx-auto max-w-6xl px-5 py-20 md:py-28" aria-labelledby="que-hacemos">
+    <h2 id="que-hacemos" class="eyebrow text-orange-deep">Qué hace el {site.acronym}</h2>
+    <div class="mt-10 grid gap-12 md:grid-cols-3 md:gap-10">
+      {
+        pillars.map((p) => (
+          <article class="flex flex-col">
+            <h3 class="display-tight text-5xl text-navy">{p.verb}</h3>
+            <p class="mt-4 flex-1 leading-relaxed text-muted">{p.body}</p>
+            <a href={p.href} class="group mt-6 block border-t-2 border-orange pt-4">
+              <span class="text-xs font-semibold tracking-wide text-muted uppercase">
+                {p.liveMeta}
+              </span>
+              <span class="mt-1 block font-semibold text-navy group-hover:underline">{p.live}</span>
+              <span class="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-orange-deep">
+                {p.cta}
+                <Icon
+                  name="lucide:arrow-right"
+                  class="size-4 transition-transform group-hover:translate-x-1"
+                  aria-hidden="true"
+                />
               </span>
             </a>
-          ) : (
-            <ExternalLink href={site.registryForm} class="tile flex flex-col bg-white">
-              <p class="eyebrow text-orange-deep">Guía de Azul</p>
-              <p class="mt-4 text-2xl leading-tight font-semibold text-navy">
-                Registrá tu negocio en la guía de comercios de Azul
-              </p>
-              <span class="mt-auto inline-flex items-center gap-2 pt-6 font-semibold text-orange-deep">
-                Es gratis
-                <Icon name="lucide:arrow-right" class="size-5" aria-hidden="true" />
-              </span>
-            </ExternalLink>
-          )
-        }
-      </div>
-    </div>
-  </section>
-  <section class="mx-auto max-w-6xl px-5 py-20 md:py-28">
-    <div class="grid gap-12 md:grid-cols-[1fr_1.15fr] md:gap-16">
-      <div>
-        <SectionHeader eyebrow="Quiénes somos" title="La casa de las empresas de Azul" />
-      </div>
-      <div class="space-y-5 text-lg leading-relaxed text-muted">
-        <p>
-          CEDA nuclea a comerciantes, industriales, prestadores de servicios y productores de Azul.
-          Defendemos los intereses del sector privado local, acercamos herramientas concretas a
-          nuestros socios y llevamos la voz de las empresas ante el municipio y las entidades
-          provinciales y nacionales.
-        </p>
-        <p>
-          Nos fundamos el <strong class="font-semibold text-ink">{site.foundedLong}</strong> como{
-            ' '
-          }
-          {site.foundingName}. Integramos {affiliationsProse}.
-        </p>
-        <p>
-          <a href="/nosotros" class="link-underline font-semibold text-navy"
-            >Conocé cómo nos organizamos</a
-          >
-        </p>
-      </div>
-    </div>
-  </section>
-
-  <section class="bg-navy text-white" aria-label="El CEDA en números">
-    <dl
-      class="mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-10 px-5 py-14 md:grid-cols-4 md:py-16"
-    >
-      {
-        stats.map((s) => (
-          <div class="flex flex-col-reverse border-l-2 border-orange pl-5">
-            <dt class="mt-2 text-sm leading-snug text-sky-2">{s.label}</dt>
-            <dd class="stat-figure">{s.figure}</dd>
-          </div>
+          </article>
         ))
       }
-    </dl>
+    </div>
   </section>
-  <section class="py-20 md:py-28">
-    <div class="mx-auto max-w-6xl px-5">
-      <SectionHeader
-        eyebrow="En qué estamos"
-        title="Proyectos abiertos, ahora"
-        titleClass="max-w-2xl"
-      />
 
-      <div class="mt-12 grid gap-6 md:grid-cols-2">
+  {/* Advocacy, newspaper-style: dated, with its source in plain sight. */}
+  <section class="bg-sky py-20 md:py-28">
+    <div class="mx-auto max-w-6xl px-5">
+      <div class="flex flex-wrap items-end justify-between gap-6">
+        <div>
+          <SectionHeader eyebrow="Representación" title="Lo que gestionamos" />
+        </div>
+        <a href="/nosotros#gestiones" class="link-underline font-semibold text-navy"
+          >Ver las {advocacy.length} gestiones</a
+        >
+      </div>
+      <ol class="mt-10 divide-y divide-sky-2 border-y border-sky-2">
         {
-          initiatives.map((item) => {
-            const Link = item.external ? ExternalLink : 'a';
+          recentAdvocacy.map((g) => {
+            const SourceLink = g.source.href.startsWith('/') ? 'a' : ExternalLink;
             return (
-              <article class="reveal group card flex flex-col p-8">
-                <h3 class="text-2xl leading-tight text-navy">{item.title}</h3>
-                <p class="mt-4 flex-1 leading-relaxed text-muted">{item.body}</p>
-                <Link
-                  href={item.href}
-                  class="mt-6 inline-flex items-center gap-2 font-semibold text-orange-deep"
-                >
-                  {item.cta}
-                  <Icon
-                    name="lucide:arrow-right"
-                    class="size-5 transition-transform group-hover:translate-x-1"
-                    aria-hidden="true"
-                  />
-                </Link>
-              </article>
+              <li class="grid gap-2 py-6 md:grid-cols-[9rem_1fr_16rem] md:items-baseline md:gap-8">
+                <p class="text-sm font-semibold text-muted">
+                  <time datetime={g.date}>{dayMonthYear.format(new Date(g.date))}</time>
+                </p>
+                <h3 class="text-xl leading-snug text-navy">{g.title}</h3>
+                <SourceLink href={g.source.href} class="link-underline text-sm text-muted">
+                  Fuente: {g.source.label}
+                </SourceLink>
+              </li>
             );
           })
         }
-      </div>
+      </ol>
     </div>
   </section>
-  <section class="bg-sky py-20 md:py-28">
-    <div class="mx-auto grid max-w-6xl items-center gap-12 px-5 md:grid-cols-2 md:gap-16">
+
+  {/* The magazine as the flagship it is. */}
+  <section class="bg-navy py-20 text-white md:py-28">
+    <div class="mx-auto max-w-6xl px-5">
+      <div class="flex flex-wrap items-end justify-between gap-8">
+        <div class="max-w-xl">
+          <SectionHeader
+            eyebrow={`Revista · ${latest.number} ediciones`}
+            title={`Imagen ${site.acronym}`}
+            tone="navy"
+          />
+          <p class="mt-5 text-lg leading-relaxed text-sky-2">
+            Nuestra revista digital, gratuita: actualidad del comercio y la industria de Azul,
+            novedades institucionales y comercios de la ciudad.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-4">
+          <a href={`/revista/${latest.number}`} class="btn-primary inline-flex items-center gap-2">
+            <Icon name="lucide:book-open" class="size-5" aria-hidden="true" />
+            Leer la N.º {latest.number}
+          </a>
+          <a href="/revista" class="btn-secondary">Todas las ediciones</a>
+        </div>
+      </div>
+
+      <ul
+        class="-mx-5 mt-12 flex snap-x snap-mandatory gap-6 overflow-x-auto px-5 pb-4 [&_.text-muted]:text-sky-2 [&_.text-navy]:text-white [&>li]:w-40 [&>li]:shrink-0 [&>li]:snap-start lg:[&>li]:w-[calc((100%-7.5rem)/6)]"
+      >
+        {recentIssues.map((issue) => <IssueCard issue={issue} cover={coverFor(issue.cover)} />)}
+      </ul>
+    </div>
+  </section>
+
+  {/* Membership: the price next to what it buys. */}
+  <section class="mx-auto max-w-6xl px-5 py-20 md:py-28">
+    <div class="grid gap-12 md:grid-cols-[1fr_1.2fr] md:gap-16">
       <div>
-        <SectionHeader eyebrow="Beneficios" title="Ser socio rinde" />
-        <p class="mt-5 text-lg leading-relaxed text-muted">
-          {benefits.length} beneficios para socios. Entre ellos:
+        <SectionHeader eyebrow="Asociate" title="Ser socio rinde" />
+        <p class="mt-8 flex items-baseline gap-3">
+          <span class="stat-figure text-navy">{membership.fee}</span>
+          <span class="text-lg text-muted">{membership.feePeriod}</span>
         </p>
-        <ul class="mt-8 space-y-3">
-          {
-            featuredBenefits.map((b) => (
-              <li class="flex items-start gap-3 text-ink">
-                <Icon
-                  name="lucide:check"
-                  class="mt-1 size-5 shrink-0 text-orange-deep"
-                  aria-hidden="true"
-                />
-                {b.name}
-              </li>
-            ))
-          }
-        </ul>
-        <a href="/beneficios" class="link-underline mt-8 inline-block font-semibold text-navy"
-          >Ver todos los beneficios</a
+        <p class="mt-4 max-w-sm leading-relaxed text-muted">
+          Para {membership.audience.join(', ').toLowerCase()} de {site.city}. Integramos{' '}
+          {affiliationsProse}.
+        </p>
+        <div class="mt-8 flex flex-wrap gap-4">
+          <ExternalLink href={whatsappJoinUrl} class="btn-primary">Quiero asociarme</ExternalLink>
+          <a href="/beneficios" class="btn-outline">Ver los {benefits.length} beneficios</a>
+        </div>
+      </div>
+
+      <ul class="grid gap-4 self-center sm:grid-cols-2">
+        {
+          benefitPreview.map((b) => (
+            <li class="card flex items-start gap-4 p-5">
+              <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-sky text-navy">
+                <Icon name={benefitTags[b.tag]} class="size-5" aria-hidden="true" />
+              </span>
+              <span>
+                <span class="block font-semibold text-navy">{b.name}</span>
+                <span class="mt-1 block text-sm text-muted">{b.tag}</span>
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="bg-sky py-20 md:py-28">
+    <div class="mx-auto grid max-w-6xl gap-12 px-5 md:grid-cols-[0.9fr_1.1fr] md:gap-16">
+      <div>
+        <p class="eyebrow text-orange-deep">Historia</p>
+        <p
+          class="display-tight mt-4 text-[clamp(5rem,16vw,11rem)] leading-none text-navy"
+          aria-hidden="true"
+        >
+          {site.founded}
+        </p>
+        <h2 class="mt-6 max-w-md text-2xl leading-snug text-navy">
+          Más de un siglo representando a las empresas de {site.city}
+        </h2>
+        <p class="mt-4 max-w-md text-lg leading-relaxed text-muted">
+          Nacimos el {site.foundedLong} como {site.foundingName}.
+        </p>
+        <a href="/nosotros" class="link-underline mt-6 inline-block font-semibold text-navy"
+          >Conocé nuestra historia y cómo nos organizamos</a
         >
       </div>
 
-      <Image
-        src={mesaImg}
-        alt="Socios de CEDA reunidos alrededor de la mesa de la sede"
-        widths={[480, 800, 1200]}
-        sizes="(max-width: 768px) 100vw, 45vw"
-        loading="lazy"
-        class="reveal aspect-[4/3] w-full rounded-2xl object-cover"
-      />
+      <ol class="ml-1.5 space-y-8 self-center border-l-2 border-sky-2 pl-8">
+        {
+          historyMilestones.map((m) => (
+            <li class="relative">
+              <span
+                class="absolute top-1.5 -left-[2.4rem] size-3.5 rounded-full border-2 border-sky bg-orange"
+                aria-hidden="true"
+              />
+              <p class="display-tight text-2xl text-orange-deep">{m.year}</p>
+              <p class="mt-1 leading-relaxed text-ink">{m.text}</p>
+            </li>
+          ))
+        }
+      </ol>
     </div>
   </section>
 
-  <ContactBand
-    title={`Sumate al ${site.acronym}`}
-    note={`${site.whatsappDisplay} · ${address}`}
-    href={whatsappJoinUrl}
-  >
-    Estamos comenzando una nueva etapa en el {site.name} y queremos que seas parte.
-  </ContactBand>
+  {/* Closing: the two things anyone can do today. */}
+  <section class="bg-navy-deep text-white">
+    <SlashBand height="h-3" />
+    <div class="mx-auto grid max-w-6xl gap-12 px-5 py-20 md:grid-cols-2 md:gap-16 md:py-24">
+      <div>
+        <h2 class="display-tight text-h1">Hablemos</h2>
+        <p class="mt-5 max-w-md text-lg leading-relaxed text-sky-2">
+          La vía más rápida es WhatsApp. Atendemos {site.officeHours}.
+        </p>
+        <ExternalLink
+          href={site.whatsappUrl}
+          class="btn-primary mt-8 inline-flex items-center gap-2"
+        >
+          <Icon name="simple-icons:whatsapp" class="size-4" aria-hidden="true" />
+          {site.whatsappDisplay}
+        </ExternalLink>
+      </div>
+      <div class="md:border-l md:border-white/15 md:pl-16">
+        <h2 class="display-tight text-h1">Guía de Azul</h2>
+        <p class="mt-5 max-w-md text-lg leading-relaxed text-sky-2">
+          Sumá tu comercio, oficio o servicio a la guía del partido de {site.city}. Es gratis y
+          lleva un minuto.
+        </p>
+        <ExternalLink
+          href={site.registryForm}
+          class="btn-secondary mt-8 inline-flex items-center gap-2"
+        >
+          Registrar mi negocio
+          <Icon name="lucide:arrow-right" class="size-5" aria-hidden="true" />
+        </ExternalLink>
+      </div>
+    </div>
+  </section>
 </Base>

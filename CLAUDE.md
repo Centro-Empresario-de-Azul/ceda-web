@@ -28,8 +28,8 @@ Asset generators, run by hand when a source changes — they overwrite files in 
 ## Where things live
 
 - **Content is data.** `src/data/` holds `institutional` (subcommittees, foundation,
-  benefits), `advocacy` (public-record work), `magazine` (issues), `events` (dated
-  activities) and `programs` (initiatives, curriculum, prices). Edit there, not in markup —
+  benefits, membership, history), `advocacy` (public-record work), `magazine` (issues) and
+  `events` (dated activities). Edit there, not in markup —
   a teaser hardcoded in `index.astro` once kept advertising benefits that had been
   retracted from the data. Each module validates itself with **Zod** at build time, so a
   malformed entry fails the build instead of rendering wrong.
@@ -99,7 +99,8 @@ Colours are sampled from CEDA's own artwork — never approximate them.
 | `--color-sky`         | `#eff4fa` | Alternating sections                                   |
 
 Two signature devices, both from CEDA's print material: the **slash band** and the
-**marker circle**. Use them sparingly — overuse kills them. The slash band needs its white
+**marker circle** (static — the owner rejected the drawing animation). Use them sparingly —
+overuse kills them. The slash band needs its white
 base; over navy the navy stripes vanish and it reads as stray orange dashes.
 
 ## Traps

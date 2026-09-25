@@ -1,6 +1,6 @@
 ---
-// CEDA rings its slogan in a hand-drawn orange marker ellipse. Reproduced here as an
-// overshooting SVG stroke. The padding is what reserves room for the ellipse, so it is
+// CEDA rings its slogan in a hand-drawn orange marker ellipse. Reproduced here as a static,
+// overshooting SVG stroke — deliberately not animated. The padding is what reserves room for the ellipse, so it is
 // never clipped by the viewport edge.
 interface Props {
   class?: string;
@@ -22,7 +22,6 @@ const { class: className = '' } = Astro.props;
       stroke="var(--color-orange)"
       stroke-linecap="round"
       vector-effect="non-scaling-stroke"
-      pathLength="1"
       class="marker-stroke"></path>
   </svg>
 </span>
@@ -30,21 +29,5 @@ const { class: className = '' } = Astro.props;
 <style>
   .marker-stroke {
     stroke-width: 5;
-  }
-
-  /* Dash values are in pathLength units, so the stroke finishes drawing however far the
-     non-scaling stroke stretches at wide viewports. */
-  @media (prefers-reduced-motion: no-preference) {
-    .marker-stroke {
-      stroke-dasharray: 1;
-      stroke-dashoffset: 1;
-      animation: draw-marker 1.1s 0.35s cubic-bezier(0.65, 0, 0.35, 1) forwards;
-    }
-  }
-
-  @keyframes draw-marker {
-    to {
-      stroke-dashoffset: 0;
-    }
   }
 </style>
