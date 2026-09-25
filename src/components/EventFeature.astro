@@ -4,6 +4,7 @@ import { Icon } from 'astro-icon/components';
 import ExternalLink from './ExternalLink.astro';
 import { site } from '../site';
 import type { CedaEvent } from '../data/events';
+import { posterFor } from '../lib/event-posters';
 
 interface Props {
   event: CedaEvent;
@@ -12,18 +13,7 @@ interface Props {
 }
 const { event, detailed = false } = Astro.props;
 
-// Scoped to events/ deliberately: eager glob *imports* everything it matches, so a wider
-// pattern would ship every jpg under assets/img, referenced or not.
-const posters = import.meta.glob<{ default: ImageMetadata }>('../assets/img/events/**/*.jpg', {
-  eager: true,
-});
-const posterEntry = posters[`../assets/img/${event.poster}`];
-if (!posterEntry) {
-  throw new Error(
-    `Poster not found: src/assets/img/${event.poster} (referenced by "${event.title}" in src/data/events.ts) — posters must live under src/assets/img/events/`,
-  );
-}
-const poster = posterEntry.default;
+const poster = posterFor(event.poster, event.title);
 const schemaPoster = await getImage({ src: poster, width: 900, format: 'jpeg' });
 
 const organizationId = `${site.origin}/#organizacion`;

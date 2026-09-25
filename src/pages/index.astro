@@ -7,18 +7,17 @@ import MarkerCircle from '../components/MarkerCircle.astro';
 import SectionHeader from '../components/SectionHeader.astro';
 import ExternalLink from '../components/ExternalLink.astro';
 import ContactBand from '../components/ContactBand.astro';
-import BusinessDirectory from '../components/BusinessDirectory.astro';
-import EventFeature from '../components/EventFeature.astro';
-import IssueCard from '../components/IssueCard.astro';
 import { site, address, affiliationsProse, whatsappJoinUrl } from '../site';
 import heroImg from '../assets/img/reunion-turismo.jpg';
 import mesaImg from '../assets/img/reunion-juntos-es-mejor.jpg';
 import { upcoming } from '../data/events';
 import { initiatives } from '../data/programs';
-import { benefits, featuredBenefits } from '../data/institutional';
+import { benefits, featuredBenefits, membership } from '../data/institutional';
 import { advocacy } from '../data/advocacy';
 import { latest } from '../data/magazine';
 import { coverFor } from '../lib/magazine-covers';
+import { posterFor } from '../lib/event-posters';
+import { yearsSince } from '../lib/stats';
 
 const recentAdvocacy = advocacy.slice(0, 3);
 const monthYear = new Intl.DateTimeFormat('es-AR', {
@@ -26,6 +25,14 @@ const monthYear = new Intl.DateTimeFormat('es-AR', {
   year: 'numeric',
   timeZone: 'UTC',
 });
+const cover = coverFor(latest.cover);
+
+const stats = [
+  { figure: String(yearsSince(site.foundedISO, new Date())), label: 'años representando a Azul' },
+  { figure: String(latest.number), label: 'ediciones de la revista Imagen CEDA' },
+  { figure: String(benefits.length), label: 'beneficios para socios' },
+  { figure: String(advocacy.length), label: 'gestiones con registro público' },
+];
 ---
 
 <Base
@@ -81,14 +88,121 @@ const monthYear = new Intl.DateTimeFormat('es-AR', {
     <SlashBand height="h-3" class="absolute bottom-0 left-0" />
   </section>
 
-  {
-    upcoming && (
-      <section class="bg-navy py-20 md:py-24">
-        <EventFeature event={upcoming} />
-      </section>
-    )
-  }
+  <section class="bg-sky py-16 md:py-24" aria-labelledby="ahora">
+    <div class="mx-auto max-w-6xl px-5">
+      <p id="ahora" class="eyebrow text-orange-deep">Ahora en el {site.acronym}</p>
 
+      <div class="mt-8 grid gap-5 lg:grid-cols-3">
+        {
+          upcoming ? (
+            <a href="/programas" class="tile flex flex-col bg-navy text-white lg:row-span-2">
+              <p class="eyebrow text-orange-bright">Próxima actividad</p>
+              <Image
+                src={posterFor(upcoming.poster, upcoming.title)}
+                alt={`Afiche de ${upcoming.title}`}
+                widths={[320, 560]}
+                sizes="(max-width: 1024px) 80vw, 30vw"
+                loading="lazy"
+                class="mt-5 max-h-80 w-auto self-start rounded-xl"
+              />
+              <h2 class="display-tight mt-6 text-3xl">{upcoming.title}</h2>
+              <p class="mt-3 flex items-start gap-2 text-sky-2">
+                <Icon name="lucide:calendar-days" class="mt-1 size-4 shrink-0" aria-hidden="true" />
+                <span>
+                  <time datetime={upcoming.startISO}>{upcoming.dateLabel}</time>,{' '}
+                  {upcoming.timeLabel} h · {upcoming.venue}
+                </span>
+              </p>
+              <span class="mt-auto inline-flex items-center gap-2 pt-6 font-semibold text-orange-bright">
+                Ver la actividad
+                <Icon name="lucide:arrow-right" class="size-5" aria-hidden="true" />
+              </span>
+            </a>
+          ) : (
+            <a href={`/revista/${latest.number}`} class="tile flex flex-col bg-white lg:row-span-2">
+              <p class="eyebrow text-orange-deep">Revista · N.º {latest.number}</p>
+              <Image
+                src={cover}
+                alt={`Tapa de Imagen ${site.acronym} número ${latest.number}, ${latest.date}`}
+                widths={[320, 560]}
+                sizes="(max-width: 1024px) 70vw, 28vw"
+                loading="lazy"
+                class="mt-5 w-3/5 self-center rounded-lg shadow-[0_18px_40px_-20px_rgba(28,58,112,0.6)] lg:w-4/5"
+              />
+              <h2 class="mt-6 text-2xl leading-tight text-navy">{latest.headline}</h2>
+              <span class="mt-auto inline-flex items-center gap-2 pt-6 font-semibold text-orange-deep">
+                Leer online
+                <Icon name="lucide:arrow-right" class="size-5" aria-hidden="true" />
+              </span>
+            </a>
+          )
+        }
+
+        <div class="tile bg-navy text-white lg:col-span-2">
+          <p class="eyebrow text-orange-bright">Lo que gestionamos</p>
+          <ul class="mt-5 divide-y divide-white/10">
+            {
+              recentAdvocacy.map((g) => (
+                <li class="py-4 first:pt-0">
+                  <p class="text-xs tracking-wide text-sky-2 uppercase">
+                    <time datetime={g.date}>{monthYear.format(new Date(g.date))}</time>
+                  </p>
+                  <h3 class="mt-1 text-xl leading-tight">{g.title}</h3>
+                </li>
+              ))
+            }
+          </ul>
+          <a
+            href="/nosotros#gestiones"
+            class="mt-2 inline-flex items-center gap-2 font-semibold text-orange-bright"
+          >
+            Ver todas las gestiones
+            <Icon name="lucide:arrow-right" class="size-5" aria-hidden="true" />
+          </a>
+        </div>
+
+        <a href="/beneficios#asociate" class="tile flex flex-col bg-orange-deep text-white">
+          <p class="eyebrow">Asociate</p>
+          <p class="stat-figure mt-4">{membership.fee}</p>
+          <p class="mt-1 text-white/85">{membership.feePeriod}</p>
+          <span class="mt-auto inline-flex items-center gap-2 pt-6 font-semibold">
+            Cómo sumarte
+            <Icon name="lucide:arrow-right" class="size-5" aria-hidden="true" />
+          </span>
+        </a>
+
+        {
+          upcoming ? (
+            <a href={`/revista/${latest.number}`} class="tile flex items-center gap-5 bg-white">
+              <Image
+                src={cover}
+                alt=""
+                widths={[160, 240]}
+                sizes="96px"
+                loading="lazy"
+                class="w-24 shrink-0 rounded-md"
+              />
+              <span>
+                <span class="eyebrow block text-orange-deep">Revista · N.º {latest.number}</span>
+                <span class="mt-2 block font-semibold text-navy">{latest.headline}</span>
+              </span>
+            </a>
+          ) : (
+            <ExternalLink href={site.registryForm} class="tile flex flex-col bg-white">
+              <p class="eyebrow text-orange-deep">Guía de Azul</p>
+              <p class="mt-4 text-2xl leading-tight font-semibold text-navy">
+                Registrá tu negocio en la guía de comercios de Azul
+              </p>
+              <span class="mt-auto inline-flex items-center gap-2 pt-6 font-semibold text-orange-deep">
+                Es gratis
+                <Icon name="lucide:arrow-right" class="size-5" aria-hidden="true" />
+              </span>
+            </ExternalLink>
+          )
+        }
+      </div>
+    </div>
+  </section>
   <section class="mx-auto max-w-6xl px-5 py-20 md:py-28">
     <div class="grid gap-12 md:grid-cols-[1fr_1.15fr] md:gap-16">
       <div>
@@ -116,7 +230,21 @@ const monthYear = new Intl.DateTimeFormat('es-AR', {
     </div>
   </section>
 
-  <section class="bg-sky py-20 md:py-28">
+  <section class="bg-navy text-white" aria-label="El CEDA en números">
+    <dl
+      class="mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-10 px-5 py-14 md:grid-cols-4 md:py-16"
+    >
+      {
+        stats.map((s) => (
+          <div class="flex flex-col-reverse border-l-2 border-orange pl-5">
+            <dt class="mt-2 text-sm leading-snug text-sky-2">{s.label}</dt>
+            <dd class="stat-figure">{s.figure}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </section>
+  <section class="py-20 md:py-28">
     <div class="mx-auto max-w-6xl px-5">
       <SectionHeader
         eyebrow="En qué estamos"
@@ -129,7 +257,7 @@ const monthYear = new Intl.DateTimeFormat('es-AR', {
           initiatives.map((item) => {
             const Link = item.external ? ExternalLink : 'a';
             return (
-              <article class="reveal group flex flex-col rounded-2xl border border-sky-2 bg-white p-8 transition-shadow hover:shadow-[0_14px_40px_-18px_rgba(28,58,112,0.45)]">
+              <article class="reveal group card flex flex-col p-8">
                 <h3 class="text-2xl leading-tight text-navy">{item.title}</h3>
                 <p class="mt-4 flex-1 leading-relaxed text-muted">{item.body}</p>
                 <Link
@@ -150,45 +278,7 @@ const monthYear = new Intl.DateTimeFormat('es-AR', {
       </div>
     </div>
   </section>
-
-  <section class="mx-auto max-w-6xl px-5 py-20 md:py-28">
-    <div class="grid gap-12 lg:grid-cols-[1.5fr_1fr] lg:gap-16">
-      <div>
-        <SectionHeader eyebrow="Representación" title="Lo que gestionamos" />
-        <ul class="mt-10 space-y-px overflow-hidden rounded-2xl border border-sky-2 bg-sky-2">
-          {
-            recentAdvocacy.map((g) => (
-              <li class="bg-white p-6">
-                <p class="eyebrow text-muted">
-                  <time datetime={g.date}>{monthYear.format(new Date(g.date))}</time>
-                </p>
-                <h3 class="mt-2 text-xl leading-tight text-navy">{g.title}</h3>
-              </li>
-            ))
-          }
-        </ul>
-        <a
-          href="/nosotros#gestiones"
-          class="link-underline mt-6 inline-block font-semibold text-navy"
-          >Ver todas las gestiones</a
-        >
-      </div>
-
-      <div>
-        <SectionHeader eyebrow="Revista" title="Imagen CEDA" />
-        <ul class="mt-10 max-w-60">
-          <IssueCard issue={latest} cover={coverFor(latest.cover)} />
-        </ul>
-        <a href="/revista" class="link-underline mt-6 inline-block font-semibold text-navy"
-          >Todas las ediciones</a
-        >
-      </div>
-    </div>
-  </section>
-
-  <BusinessDirectory tone="sky" />
-
-  <section class="py-20 md:py-28">
+  <section class="bg-sky py-20 md:py-28">
     <div class="mx-auto grid max-w-6xl items-center gap-12 px-5 md:grid-cols-2 md:gap-16">
       <div>
         <SectionHeader eyebrow="Beneficios" title="Ser socio rinde" />

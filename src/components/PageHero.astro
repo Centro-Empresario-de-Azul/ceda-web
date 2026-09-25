@@ -1,19 +1,53 @@
 ---
+import { Image } from 'astro:assets';
 import SlashBand from './SlashBand.astro';
 
 interface Props {
   eyebrow: string;
   title: string;
   lead?: string;
+  /** A photo behind the navy, as on the home page. Omit for a flat navy header. */
+  image?: ImageMetadata;
 }
-const { eyebrow, title, lead } = Astro.props;
+const { eyebrow, title, lead, image } = Astro.props;
 ---
 
-<section class="relative bg-navy">
-  <div class="mx-auto max-w-6xl px-5 pt-16 pb-16 md:pt-20 md:pb-20">
+<section class="relative isolate overflow-hidden bg-navy">
+  {
+    image && (
+      <>
+        <Image
+          src={image}
+          alt=""
+          widths={[640, 1024, 1600]}
+          sizes="100vw"
+          loading="eager"
+          fetchpriority="high"
+          class="absolute inset-0 -z-10 h-full w-full object-cover object-center opacity-35"
+        />
+        <div
+          class="absolute inset-0 -z-10 bg-[linear-gradient(100deg,var(--color-navy-ink)_20%,rgba(28,58,112,0.85)_60%,rgba(28,58,112,0.6)_100%)]"
+          aria-hidden="true"
+        />
+      </>
+    )
+  }
+  <div
+    class:list={[
+      'mx-auto max-w-6xl px-5',
+      image ? 'pt-20 pb-24 md:pt-28 md:pb-32' : 'pt-16 pb-16 md:pt-20 md:pb-20',
+    ]}
+  >
     <p class="eyebrow text-orange-bright">{eyebrow}</p>
     <h1 class="display-tight mt-5 max-w-3xl text-h1 text-white">{title}</h1>
     {lead && <p class="mt-6 max-w-2xl text-lg leading-relaxed text-sky-2">{lead}</p>}
+    {
+      Astro.slots.has('default') && (
+        <div class="mt-9 flex flex-wrap gap-4">
+          <slot />
+        </div>
+      )
+    }
   </div>
   <SlashBand height="h-3" class="absolute bottom-0 left-0" />
 </section>
