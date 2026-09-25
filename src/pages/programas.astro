@@ -10,17 +10,16 @@ import EventFeature from '../components/EventFeature.astro';
 import { site, pageTitle } from '../site';
 import asambleaImg from '../assets/img/asamblea.jpg';
 import { upcoming } from '../data/events';
-import { digitalTopics, digitalFacts } from '../data/programs';
 ---
 
 <Base
   title={pageTitle('Programas e iniciativas')}
-  description="Herramientas Digitales para tu Negocio, Centro Comercial a Cielo Abierto, el padrón de comercios de Azul y Azul Mueve: los programas activos de CEDA."
+  description="Centro Comercial a Cielo Abierto, el padrón de comercios de Azul y Azul Mueve: los programas activos de CEDA."
 >
   <PageHero
     eyebrow="Programas e iniciativas"
     title="Lo que CEDA está haciendo ahora"
-    lead="Formación, revitalización del centro y visibilidad para las empresas de Azul."
+    lead="Revitalización del centro y visibilidad para las empresas de Azul."
   />
 
   {
@@ -30,78 +29,6 @@ import { digitalTopics, digitalFacts } from '../data/programs';
       </section>
     )
   }
-
-  <section class="mx-auto max-w-6xl px-5 py-20 md:py-28">
-    <div class="grid gap-12 md:grid-cols-[1fr_1.15fr] md:gap-16">
-      <div>
-        <SectionHeader eyebrow="Formación" title="Herramientas Digitales para tu Negocio" />
-      </div>
-      <div class="space-y-5 text-lg leading-relaxed text-muted">
-        <p>
-          Un programa pensado para comercios, empresas e industria de Azul, con contenidos prácticos
-          para aplicar desde el primer día.
-        </p>
-        <p>
-          ¿Te interesa la inteligencia artificial pero no sabés por dónde arrancar? La primera clase
-          es justamente esa. El resto del programa se construye desde ahí, paso a paso, hasta
-          dejarte herramientas funcionando en tu propio negocio.
-        </p>
-        <p class="text-base">
-          Lo organiza la <strong class="font-semibold text-ink">Subcomisión de Jóvenes</strong>,
-          Jóvenes en Movimiento.
-        </p>
-      </div>
-    </div>
-
-    <h3 class="eyebrow mt-20 text-orange-deep">Qué vas a aprender</h3>
-    <div class="mt-8 grid gap-6 md:grid-cols-3">
-      {
-        digitalTopics.map((c) => (
-          <article class="reveal rounded-2xl border border-sky-2 bg-white p-7">
-            <h4 class="text-xl leading-tight text-navy">{c.name}</h4>
-            <p class="mt-3 leading-relaxed text-muted">{c.body}</p>
-          </article>
-        ))
-      }
-      <article class="reveal flex flex-col justify-center rounded-2xl bg-sky p-7">
-        <p class="leading-relaxed text-navy">
-          Te vas con un plan de mejora concreto para tu negocio, armado en el taller final con una o
-          dos herramientas del programa — listo para implementar.
-        </p>
-      </article>
-    </div>
-
-    <h3 class="eyebrow mt-20 text-orange-deep">Ficha del programa</h3>
-    <dl
-      class="mt-8 grid gap-px overflow-hidden rounded-2xl border border-sky-2 bg-sky-2 sm:grid-cols-2 lg:grid-cols-3"
-    >
-      {
-        digitalFacts.map((f) => (
-          <div class="bg-white p-7">
-            <dt class="eyebrow text-muted">{f.label}</dt>
-            <dd class="mt-3 text-2xl leading-tight font-semibold text-navy">{f.value}</dd>
-            <dd class="mt-2 text-sm leading-relaxed text-muted">{f.detail}</dd>
-          </div>
-        ))
-      }
-    </dl>
-
-    <div class="mt-10 rounded-2xl border-l-4 border-orange bg-sky p-7">
-      <p class="leading-relaxed text-navy">
-        Cada cupo suma para que un joven o una joven de Azul curse gratis <strong
-          class="font-semibold">Más Allá del Código</strong
-        >.
-      </p>
-    </div>
-
-    <div class="mt-10 flex flex-wrap items-center gap-5">
-      <ExternalLink href={site.whatsappUrl} class="btn-primary">Reservá tu lugar</ExternalLink>
-      <p class="text-sm text-muted">
-        Las inscripciones se gestionan a través de CEDA. Consultá por WhatsApp la fecha de inicio de
-        la próxima edición.
-      </p>
-    </div>
-  </section>
 
   <section class="bg-navy text-white">
     <SlashBand height="h-3" />

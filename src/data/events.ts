@@ -3,17 +3,26 @@
 // prices and speaker counts move until the last minute, so leave those to WhatsApp.
 
 import { z } from 'zod';
+import { site } from '../site';
 
-const isDateTime = (s: string) => !Number.isNaN(new Date(s).getTime());
+// The offset is required: the fallback end below reuses it to find the event's local day.
+const dateTime = z
+  .string()
+  .regex(
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?[+-]\d{2}:\d{2}$/,
+    'expected YYYY-MM-DDTHH:MM±HH:MM',
+  )
+  .refine((s) => !Number.isNaN(new Date(s).getTime()), 'not a parseable date-time');
 
 const eventSchema = z
   .object({
     title: z.string().min(1),
     tagline: z.string().min(1),
     body: z.string().min(1),
-    /** Start and end, local time, for schema.org and for the visible date. */
-    startISO: z.string().refine(isDateTime, 'not a parseable date-time'),
-    endISO: z.string().refine(isDateTime, 'not a parseable date-time'),
+    /** Local time with offset, for schema.org and for the visible date. */
+    startISO: dateTime,
+    /** Only when the flyer prints one — never guess an end time. */
+    endISO: dateTime.optional(),
     dateLabel: z.string().min(1),
     timeLabel: z.string().min(1),
     venue: z.string().min(1),
@@ -25,7 +34,7 @@ const eventSchema = z
     organiser: z.string().min(1),
   })
   // An inverted range would silently make `upcoming` behave as if the event were over.
-  .refine((e) => new Date(e.endISO) > new Date(e.startISO), {
+  .refine((e) => !e.endISO || new Date(e.endISO) > new Date(e.startISO), {
     message: 'endISO must come after startISO',
     path: ['endISO'],
   });
@@ -38,11 +47,10 @@ export const events = z.array(eventSchema).parse([
     tagline: 'Sabores, historias y proyectos azuleños',
     body: 'Una noche para conocer emprendimientos locales, escuchar sus historias y disfrutar de una experiencia única de sabores y proyectos azuleños, con degustación de sushi, vinos, jamón crudo y miel, y la presentación del grupo fotográfico La Ronda.',
     startISO: '2026-09-24T20:00:00-03:00',
-    endISO: '2026-09-24T23:00:00-03:00',
     dateLabel: '24 de septiembre',
-    timeLabel: '20:00 a 23:00',
+    timeLabel: '20:00',
     venue: 'Sede del CEDA',
-    address: 'España 620, Azul',
+    address: `${site.street}, ${site.city}`,
     topics: ['Sushi', 'Vinos', 'Jamón crudo', 'Miel', 'Fotografía local'],
     poster: 'events/cep-2026.jpg',
     organiser: 'CEDA',
@@ -52,9 +60,9 @@ export const events = z.array(eventSchema).parse([
     tagline: 'Inspirate, aprendé, conectá',
     body: 'Una tarde para descubrir herramientas digitales, escuchar experiencias reales y compartir ideas que te ayudarán a hacer crecer tu negocio.',
     startISO: '2026-08-29T15:00:00-03:00',
-    endISO: '2026-08-29T18:30:00-03:00',
+    endISO: '2026-08-29T19:00:00-03:00',
     dateLabel: '29 de agosto',
-    timeLabel: '15:00 a 18:30',
+    timeLabel: '15:00 a 19:00',
     venue: 'Auditorio del Consejo Profesional de Ciencias Económicas',
     address: 'Av. Perón 800, Azul',
     topics: ['E-commerce', 'Publicidad audiovisual', 'Marketing y redes sociales', 'Logística'],
@@ -63,5 +71,26 @@ export const events = z.array(eventSchema).parse([
   },
 ]);
 
-/** The next event that has not finished yet, or null. Evaluated at build time. */
-export const upcoming = events.find((e) => new Date(e.endISO).getTime() > Date.now()) ?? null;
+/** When the event is over: its end time, or midnight closing its local day if the flyer
+    gives only a start. */
+export function eventEnd(e: Pick<CedaEvent, 'startISO' | 'endISO'>): Date {
+  if (e.endISO) return new Date(e.endISO);
+  const day = e.startISO.slice(0, 10);
+  const offset = e.startISO.slice(-6);
+  return new Date(`${day}T23:59:59${offset}`);
+}
+
+/** The soonest event that has not finished by `now`, whatever order the data is in. */
+export function pickUpcoming<E extends Pick<CedaEvent, 'startISO' | 'endISO'>>(
+  list: readonly E[],
+  now: Date,
+): E | null {
+  return (
+    [...list]
+      .filter((e) => eventEnd(e) > now)
+      .sort((a, b) => new Date(a.startISO).getTime() - new Date(b.startISO).getTime())[0] ?? null
+  );
+}
+
+/** Evaluated at build time. */
+export const upcoming = pickUpcoming(events, new Date());

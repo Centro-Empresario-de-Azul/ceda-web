@@ -4,10 +4,10 @@
 # "Respect Existing Headers". Otherwise Cloudflare overrides the values below and the
 # immutable rules never reach the browser.
 #
-# The site loads no external subresources — fonts, icons, images and the single script are
-# all same-origin — so the policy below stays at 'self' with no CDN allowances. Adding a
-# third-party embed means widening it; adding a link does not (CSP does not govern
-# navigation targets).
+# Fonts, icons, images and scripts are all same-origin. The one third-party allowance is
+# Cloudflare Web Analytics (static.cloudflareinsights.com / cloudflareinsights.com), which
+# Cloudflare injects at the edge. Adding another embed means widening the policy; adding a
+# link does not (CSP does not govern navigation targets).
 #
 # Google Search Console needs nothing here: DNS TXT and the meta-tag method are both
 # outside CSP. Google Analytics or Tag Manager WOULD need
@@ -21,6 +21,7 @@
 # more dangerous unsafe-eval: it does not enable eval().
 
 /*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin

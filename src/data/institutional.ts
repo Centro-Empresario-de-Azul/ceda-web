@@ -36,7 +36,7 @@ export const subcommittees = z.array(subcommitteeSchema).parse([
     // "Jóvenes en Movimiento" is the subcomisión's motto, not its name.
     name: 'Subcomisión de Jóvenes',
     motto: 'Jóvenes en Movimiento',
-    body: 'La subcomisión de jóvenes del CEDA, que sigue sumando integrantes. Impulsa la formación y los proyectos de la próxima generación de empresarios —entre ellos el programa Herramientas Digitales para tu Negocio— y acompaña iniciativas de emprendedurismo junto a la Facultad de Agronomía. Hoy está construyendo la guía de comercios, oficios y servicios del partido de Azul, a partir del padrón de negocios registrados.',
+    body: 'La subcomisión de jóvenes del CEDA, que sigue sumando integrantes. Impulsa la formación y los proyectos de la próxima generación de empresarios —como la Jornada de Comercio Digital— y acompaña iniciativas de emprendedurismo junto a la Facultad de Agronomía. Hoy está construyendo la guía de comercios, oficios y servicios del partido de Azul, a partir del padrón de negocios registrados.',
   },
   {
     name: 'Centro Comercial a Cielo Abierto',
@@ -49,6 +49,8 @@ export const subcommittees = z.array(subcommitteeSchema).parse([
     body: 'Articula la oferta turística de Azul para que funcione de manera integrada: hoteles, gastronomía, agencias de viaje y prestadores de servicios, junto al comercio local.',
   },
 ]);
+
+export const foundationFounded = { iso: '1994-07-14', long: '14 de julio de 1994' };
 
 // Officers of Fundación CEDA — a separate legal entity from CEDA, with its own
 // leadership. Ramiro Layús presides it while also serving as CEDA's secretario.
@@ -92,7 +94,7 @@ export const foundationMembers = z
 export const benefits = z.array(benefitSchema).parse([
   {
     name: 'Salón para reuniones y eventos',
-    body: 'Espacio para reuniones, entrevistas y capacitaciones, y salón para charlas y eventos, en la sede de España 620.',
+    body: `Espacio para reuniones, entrevistas y capacitaciones, y salón para charlas y eventos, en la sede de ${site.street}.`,
     tag: 'Sede',
     featured: true,
   },
@@ -103,7 +105,7 @@ export const benefits = z.array(benefitSchema).parse([
     featured: true,
   },
   {
-    name: 'Banco Provincia',
+    name: 'Extracciones en la sede',
     body: 'Extracciones en la sede: hasta $800.000 con Banco Provincia de Buenos Aires; otros bancos según su propio límite.',
     tag: 'Pagos',
   },
@@ -158,6 +160,37 @@ export const benefits = z.array(benefitSchema).parse([
 
 /** The handful named on the home page. Never a second copy of the text. */
 export const featuredBenefits = benefits.filter((b) => b.featured);
+
+// From CEDA's own "Sumate al CEDA" page in Revista Imagen CEDA N.º 318. The fee is CEDA's
+// published rate, unlike event prices; update it from the latest issue.
+export const membership = z
+  .object({
+    audience: z.array(z.string().min(1)).nonempty(),
+    reasons: z.array(z.string().min(1)).nonempty(),
+    fee: z.string().min(1),
+    feeSource: z.object({ label: z.string().min(1), href: z.string().startsWith('/') }),
+  })
+  .parse({
+    audience: ['Comerciantes', 'Empresarios', 'Emprendedores', 'Profesionales'],
+    reasons: [
+      'Representación institucional ante organismos públicos y privados.',
+      'Acceso a capacitaciones y charlas exclusivas.',
+      'Difusión y promoción de tu emprendimiento.',
+      'Participación en ferias, eventos y actividades.',
+      'Networking con otros actores del ecosistema local.',
+    ],
+    fee: '$4.000 por mes',
+    feeSource: { label: 'Revista Imagen CEDA N.º 318, septiembre 2026', href: '/revista/318' },
+  });
+
+// Where the 1930, 1952 and 1980 names and seat in the Historia section come from.
+export const historySources = z.array(z.object({ label: z.string().min(1), href: z.url() })).parse([
+  { label: 'Salidores', href: 'https://salidores.com/azul/ceda-centro-empresario-de-azul' },
+  {
+    label: 'El Tiempo, "Pasó en Azul un 24 de mayo"',
+    href: 'https://www.diarioeltiempo.com.ar/nota-paso-en-azul-un-24-de-mayo-205564',
+  },
+]);
 
 // The institution's first board, 1917, under its founding name (site.foundingName).
 export const foundingBoardTitle = '1.ª Comisión Directiva (1917)';

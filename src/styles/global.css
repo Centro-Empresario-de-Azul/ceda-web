@@ -34,8 +34,13 @@
 
 @layer base {
   html {
-    scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
   }
 
   body {
@@ -59,10 +64,16 @@
     text-wrap: balance;
   }
 
+  /* The vivid orange falls under 3:1 on --color-sky, so light surfaces take the deep
+     orange and dark ones the bright — each clears 3:1 against its own background. */
   :focus-visible {
-    outline: 3px solid var(--color-orange);
+    outline: 3px solid var(--color-orange-deep);
     outline-offset: 3px;
     border-radius: 2px;
+  }
+
+  :is(header, footer, .bg-navy, .bg-navy-deep) :focus-visible {
+    outline-color: var(--color-orange-bright);
   }
 
   ::selection {
@@ -145,12 +156,6 @@
     opacity: 1;
   }
 
-  /* Revealing it on keyboard focus keeps it from being an invisible tab stop. */
-  .nav-logo-reveal:focus-visible {
-    animation: none;
-    opacity: 1;
-  }
-
   .link-underline {
     background-image: linear-gradient(var(--color-orange), var(--color-orange));
     background-size: 0% 2px;
@@ -227,6 +232,13 @@
       animation-range: 32px 200px;
     }
   }
+}
+
+/* Revealing it on keyboard focus keeps it from being an invisible tab stop. Unlayered on
+   purpose: inside @layer components it loses to the unlayered animation above. */
+.nav-logo-reveal:focus-visible {
+  animation: none;
+  opacity: 1;
 }
 
 /* Scroll-driven animations never advance without a scroll, so anything relying on them is

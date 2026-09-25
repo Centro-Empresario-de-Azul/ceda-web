@@ -9,12 +9,23 @@ import ExternalLink from '../components/ExternalLink.astro';
 import ContactBand from '../components/ContactBand.astro';
 import BusinessDirectory from '../components/BusinessDirectory.astro';
 import EventFeature from '../components/EventFeature.astro';
-import { site, address } from '../site';
+import IssueCard from '../components/IssueCard.astro';
+import { site, address, affiliationsProse, whatsappJoinUrl } from '../site';
 import heroImg from '../assets/img/reunion-turismo.jpg';
 import mesaImg from '../assets/img/reunion-juntos-es-mejor.jpg';
 import { upcoming } from '../data/events';
 import { initiatives } from '../data/programs';
-import { featuredBenefits } from '../data/institutional';
+import { benefits, featuredBenefits } from '../data/institutional';
+import { advocacy } from '../data/advocacy';
+import { latest } from '../data/magazine';
+import { coverFor } from '../lib/magazine-covers';
+
+const recentAdvocacy = advocacy.slice(0, 3);
+const monthYear = new Intl.DateTimeFormat('es-AR', {
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
 ---
 
 <Base
@@ -49,7 +60,7 @@ import { featuredBenefits } from '../data/institutional';
       />
 
       <h1 class="display-tight mt-4 w-fit text-display text-white md:mt-2">
-        <MarkerCircle>Juntos es<br />mejor</MarkerCircle>
+        <MarkerCircle>Juntos es <br />mejor</MarkerCircle>
       </h1>
 
       <p class="mt-12 max-w-xl text-xl leading-relaxed text-sky-2 md:text-2xl">
@@ -60,7 +71,7 @@ import { featuredBenefits } from '../data/institutional';
       </p>
 
       <div class="mt-10 flex flex-wrap gap-4">
-        <ExternalLink href={site.whatsappUrl} class="btn-primary">
+        <ExternalLink href={whatsappJoinUrl} class="btn-primary">
           Sumate al {site.acronym}
         </ExternalLink>
         <a href="/beneficios" class="btn-secondary">Ver beneficios</a>
@@ -94,8 +105,7 @@ import { featuredBenefits } from '../data/institutional';
           Nos fundamos el <strong class="font-semibold text-ink">{site.foundedLong}</strong> como{
             ' '
           }
-          {site.foundingName}. Integramos la Confederación Argentina de la Mediana Empresa (CAME) y
-          la Federación Económica de la Provincia de Buenos Aires (FEBA).
+          {site.foundingName}. Integramos {affiliationsProse}.
         </p>
         <p>
           <a href="/nosotros" class="link-underline font-semibold text-navy"
@@ -141,14 +151,49 @@ import { featuredBenefits } from '../data/institutional';
     </div>
   </section>
 
-  <BusinessDirectory />
+  <section class="mx-auto max-w-6xl px-5 py-20 md:py-28">
+    <div class="grid gap-12 lg:grid-cols-[1.5fr_1fr] lg:gap-16">
+      <div>
+        <SectionHeader eyebrow="Representación" title="Lo que gestionamos" />
+        <ul class="mt-10 space-y-px overflow-hidden rounded-2xl border border-sky-2 bg-sky-2">
+          {
+            recentAdvocacy.map((g) => (
+              <li class="bg-white p-6">
+                <p class="eyebrow text-muted">
+                  <time datetime={g.date}>{monthYear.format(new Date(g.date))}</time>
+                </p>
+                <h3 class="mt-2 text-xl leading-tight text-navy">{g.title}</h3>
+              </li>
+            ))
+          }
+        </ul>
+        <a
+          href="/nosotros#gestiones"
+          class="link-underline mt-6 inline-block font-semibold text-navy"
+          >Ver todas las gestiones</a
+        >
+      </div>
 
-  <section class="bg-sky py-20 md:py-28">
+      <div>
+        <SectionHeader eyebrow="Revista" title="Imagen CEDA" />
+        <ul class="mt-10 max-w-60">
+          <IssueCard issue={latest} cover={coverFor(latest.cover)} />
+        </ul>
+        <a href="/revista" class="link-underline mt-6 inline-block font-semibold text-navy"
+          >Todas las ediciones</a
+        >
+      </div>
+    </div>
+  </section>
+
+  <BusinessDirectory tone="sky" />
+
+  <section class="py-20 md:py-28">
     <div class="mx-auto grid max-w-6xl items-center gap-12 px-5 md:grid-cols-2 md:gap-16">
       <div>
         <SectionHeader eyebrow="Beneficios" title="Ser socio rinde" />
         <p class="mt-5 text-lg leading-relaxed text-muted">
-          Bancos, seguros, pagos y un salón propio para tus reuniones y capacitaciones.
+          {benefits.length} beneficios para socios. Entre ellos:
         </p>
         <ul class="mt-8 space-y-3">
           {
@@ -180,7 +225,11 @@ import { featuredBenefits } from '../data/institutional';
     </div>
   </section>
 
-  <ContactBand title={`Sumate al ${site.acronym}`} note={`${site.whatsappDisplay} · ${address}`}>
+  <ContactBand
+    title={`Sumate al ${site.acronym}`}
+    note={`${site.whatsappDisplay} · ${address}`}
+    href={whatsappJoinUrl}
+  >
     Estamos comenzando una nueva etapa en el {site.name} y queremos que seas parte.
   </ContactBand>
 </Base>

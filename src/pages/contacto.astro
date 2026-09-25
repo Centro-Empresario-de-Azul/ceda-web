@@ -10,7 +10,7 @@ import sedeImg from '../assets/img/socios-reunion.jpg';
 
 <Base
   title={pageTitle('Contacto')}
-  description="Escribinos por WhatsApp al 2281 47-7297, por correo a comunicacionceda@gmail.com, o acercate a España 620, Azul."
+  description={`Escribinos por WhatsApp al ${site.whatsappDisplay}, por correo a ${site.email}, o acercate a ${site.street}, ${site.city}.`}
 >
   <PageHero
     eyebrow="Contacto"
@@ -93,15 +93,16 @@ import sedeImg from '../assets/img/socios-reunion.jpg';
         </dl>
 
         <p class="mt-10 text-sm leading-relaxed text-muted">
-          La oficina atiende por teléfono {site.officeHours}. Si vas a acercarte a la sede,
-          escribinos antes por WhatsApp para confirmar.
+          Atendemos al {site.whatsappDisplay}
+          {site.officeHours}. Si vas a acercarte a la sede, escribinos antes por WhatsApp para
+          confirmar.
         </p>
       </div>
 
       <div>
         <Image
           src={sedeImg}
-          alt="Reunión de socios de CEDA en la sede de España 620"
+          alt={`Reunión de socios de ${site.acronym} en la sede de ${site.street}`}
           widths={[480, 800, 1200]}
           sizes="(max-width: 768px) 100vw, 45vw"
           loading="lazy"

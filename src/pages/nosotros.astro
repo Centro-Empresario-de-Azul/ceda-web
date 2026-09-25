@@ -5,7 +5,7 @@ import Base from '../layouts/Base.astro';
 import PageHero from '../components/PageHero.astro';
 import SectionHeader from '../components/SectionHeader.astro';
 import ExternalLink from '../components/ExternalLink.astro';
-import { site, pageTitle } from '../site';
+import { site, pageTitle, affiliationsProse } from '../site';
 import comisionImg from '../assets/img/comision-directiva.jpg';
 import fundacionImg from '../assets/img/fundacion-banner.jpg';
 
@@ -18,8 +18,10 @@ import {
   boardTitle,
   foundingBoard,
   foundingBoardTitle,
+  foundationFounded,
+  historySources,
 } from '../data/institutional';
-import { advocacy } from '../data/advocacy';
+import { advocacyByYear } from '../data/advocacy';
 ---
 
 <Base
@@ -43,8 +45,22 @@ import { advocacy } from '../data/advocacy';
           el nombre de {site.foundingName}.
         </p>
         <p>
-          A lo largo de más de un siglo la institución cambió de nombre y de sede, hasta convertirse
-          hacia mediados del siglo XX en el {site.name} que funciona hoy en {site.street}.
+          En 1930 la Liga funcionaba en Av. 25 de Mayo 733. Hacia 1952 se la conocía como Centro de
+          Comerciantes, Industriales y Propietarios de Azul, y en 1980 ya llevaba el nombre de
+          {' '}{site.name}. Hoy tiene su sede en {site.street}.
+        </p>
+        <p class="text-sm">
+          Fuentes:{' '}
+          {
+            historySources.map((src, i) => (
+              <>
+                {i > 0 && ' · '}
+                <ExternalLink href={src.href} class="link-underline">
+                  {src.label}
+                </ExternalLink>
+              </>
+            ))
+          }
         </p>
 
         <h3 class="eyebrow mt-2 text-orange-deep">{foundingBoardTitle}</h3>
@@ -117,8 +133,8 @@ import { advocacy } from '../data/advocacy';
       <div>
         <SectionHeader eyebrow="Fundación" title={`Fundación ${site.name}`} />
         <p class="mt-5 text-lg leading-relaxed text-muted">
-          Fundada el 14 de julio de 1994, reúne a instituciones públicas y privadas de la ciudad.
-          CEDA es una de ellas. Es una entidad distinta de CEDA, con su propia conducción, y
+          Fundada el {foundationFounded.long}, reúne a instituciones públicas y privadas de la
+          ciudad. CEDA es una de ellas. Es una entidad distinta de CEDA, con su propia conducción, y
           sostiene una agenda de planificación y articulación para el desarrollo de Azul.
         </p>
 
@@ -178,37 +194,55 @@ import { advocacy } from '../data/advocacy';
     </div>
   </section>
 
-  <section class="mx-auto max-w-6xl px-5 py-20 md:py-28">
+  <section id="gestiones" class="mx-auto max-w-6xl scroll-mt-20 px-5 py-20 md:py-28">
     <SectionHeader eyebrow="Representación" title="Lo que gestionamos" titleClass="max-w-2xl" />
     <p class="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
       Llevar la posición de las empresas de Azul ante el municipio y el Concejo Deliberante es parte
       del trabajo. Estas son gestiones con registro público.
     </p>
 
-    <ol class="mt-12 space-y-px overflow-hidden rounded-2xl border border-sky-2 bg-sky-2">
-      {
-        advocacy.map((g) => {
-          // source.href can be an internal path (e.g. the magazine, /revista) rather than an
-          // external citation — only external ones should open in a new tab.
-          const SourceLink = g.source.href.startsWith('/') ? 'a' : ExternalLink;
-          return (
-            <li class="bg-white p-7 md:flex md:gap-8">
-              <p class="eyebrow shrink-0 text-orange-deep md:w-20 md:pt-1">{g.year}</p>
-              <div class="mt-3 md:mt-0">
-                <h3 class="text-xl leading-tight text-navy">{g.title}</h3>
-                <p class="mt-3 leading-relaxed text-muted">{g.body}</p>
-                <SourceLink
-                  href={g.source.href}
-                  class="link-underline mt-3 inline-block text-sm text-muted"
-                >
-                  Fuente: {g.source.label}
-                </SourceLink>
-              </div>
-            </li>
-          );
-        })
-      }
-    </ol>
+    {
+      advocacyByYear.map(({ year, entries }, i) => {
+        const list = (
+          <ol class="mt-6 space-y-px overflow-hidden rounded-2xl border border-sky-2 bg-sky-2">
+            {entries.map((g) => {
+              // source.href can be an internal path (e.g. /revista/318) rather than an
+              // external citation — only external ones should open in a new tab.
+              const SourceLink = g.source.href.startsWith('/') ? 'a' : ExternalLink;
+              return (
+                <li class="bg-white p-7">
+                  <h4 class="text-xl leading-tight text-navy">{g.title}</h4>
+                  <p class="mt-3 leading-relaxed text-muted">{g.body}</p>
+                  <SourceLink
+                    href={g.source.href}
+                    class="link-underline mt-3 inline-block text-sm text-muted"
+                  >
+                    Fuente: {g.source.label}
+                  </SourceLink>
+                </li>
+              );
+            })}
+          </ol>
+        );
+        // The latest year stays open; earlier ones fold so the page doesn't run on forever.
+        return i === 0 ? (
+          <div class="mt-12">
+            <h3 class="eyebrow text-orange-deep">{year}</h3>
+            {list}
+          </div>
+        ) : (
+          <details class="group mt-6 rounded-2xl border border-sky-2 px-6 py-4">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-4">
+              <h3 class="eyebrow text-orange-deep">{year}</h3>
+              <span class="text-sm text-muted">
+                {entries.length} {entries.length === 1 ? 'gestión' : 'gestiones'}
+              </span>
+            </summary>
+            <div class="pb-2">{list}</div>
+          </details>
+        );
+      })
+    }
   </section>
 
   <section class="bg-sky py-20 md:py-28">
@@ -216,11 +250,8 @@ import { advocacy } from '../data/advocacy';
       <div>
         <SectionHeader eyebrow="Afiliaciones" title="No trabajamos solos" />
         <p class="mt-5 text-lg leading-relaxed text-muted">
-          CEDA integra la <strong class="font-semibold text-ink"
-            >Confederación Argentina de la Mediana Empresa (CAME)</strong
-          > y la <strong class="font-semibold text-ink"
-            >Federación Económica de la Provincia de Buenos Aires (FEBA)</strong
-          >, y trabaja junto a cámaras empresarias de la región.
+          {site.acronym} integra {affiliationsProse}, y trabaja junto a cámaras empresarias de la
+          región.
         </p>
       </div>
 

@@ -3,13 +3,14 @@ import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import icon from 'astro-icon';
 import tailwindcss from '@tailwindcss/vite';
+import { site } from './src/site.ts';
 
 export default defineConfig({
   // Canonicals, og:url and og:image are absolute and built from this. Override it to
   // preview link cards on a temporary host, e.g.
   //   SITE_URL=https://ceda-web.<account>.workers.dev npm run build
-  // Leave unset for real deploys so canonicals point at the production domain.
-  site: process.env.SITE_URL ?? 'https://www.ceda.org.ar',
+  // Leave unset for real deploys so canonicals point at the production domain, site.origin.
+  site: process.env.SITE_URL ?? site.origin,
   trailingSlash: 'never',
   build: { format: 'file' },
   integrations: [
@@ -30,13 +31,16 @@ export default defineConfig({
           'download',
           'calendar',
           'chevron-down',
+          'chevron-left',
+          'chevron-right',
           'book-open',
           'zoom-in',
         ],
       },
     }),
+    // No lastmod: the build time would mark every page changed on every deploy, and search
+    // engines learn to ignore a lastmod that is always "now".
     sitemap({
-      lastmod: new Date(),
       // 404 is reachable but should never be indexed.
       filter: (page) => !page.endsWith('/404'),
     }),

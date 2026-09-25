@@ -25,7 +25,8 @@ const slashBand = (y) => {
   }
   return {
     input: Buffer.from(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${BAND}">${slashes.join('')}</svg>`,
+      // White base, as SlashBand.astro's bg-white: over navy the navy slashes vanish.
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${BAND}"><rect width="${W}" height="${BAND}" fill="#fff"/>${slashes.join('')}</svg>`,
     ),
     top: y,
     left: 0,

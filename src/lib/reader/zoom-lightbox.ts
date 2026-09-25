@@ -2,16 +2,17 @@ import { renderPageToCanvas, type PdfDocument } from './pdf-engine';
 
 const ZOOM_SCALE = 3;
 
+// A native modal <dialog> supplies role, aria-modal, the focus trap and Escape-to-close.
 export class ZoomLightbox {
   private canvas: HTMLCanvasElement;
-  private isOpen = false;
+  private closeButton: HTMLElement | null;
   private opening: Promise<void> | null = null;
 
   constructor(
-    private root: HTMLElement,
+    private root: HTMLDialogElement,
     private onToggle: (open: boolean) => void,
+    private returnFocusTo?: HTMLElement,
   ) {
-    this.root.classList.add('hidden');
     this.canvas = document.createElement('canvas');
     this.canvas.className = 'zoom-lightbox-canvas';
     this.root.appendChild(this.canvas);
@@ -20,13 +21,14 @@ export class ZoomLightbox {
     this.root.addEventListener('click', (event) => {
       if (event.target === this.root) this.close();
     });
-    // The close button is rendered in the page markup so it can use the site's inlined
-    // icon set; without it (and without Escape) the backdrop was the only way out.
-    this.root.querySelector<HTMLElement>('[data-zoom-close]')?.addEventListener('click', () => {
+    this.closeButton = this.root.querySelector<HTMLElement>('[data-zoom-close]');
+    this.closeButton?.addEventListener('click', () => {
       this.close();
     });
-    document.addEventListener('keydown', (event) => {
-      if (this.isOpen && event.key === 'Escape') this.close();
+    // Fires for close() and for Escape alike, so both restore state the same way.
+    this.root.addEventListener('close', () => {
+      this.onToggle(false);
+      this.returnFocusTo?.focus();
     });
   }
 
@@ -36,8 +38,8 @@ export class ZoomLightbox {
     if (this.opening) return this.opening;
     this.opening = renderPageToCanvas(doc, pageNumber, this.canvas, ZOOM_SCALE)
       .then(() => {
-        this.root.classList.remove('hidden');
-        this.isOpen = true;
+        if (!this.root.open) this.root.showModal();
+        this.closeButton?.focus();
         this.onToggle(true);
       })
       .finally(() => {
@@ -47,8 +49,6 @@ export class ZoomLightbox {
   }
 
   close(): void {
-    this.root.classList.add('hidden');
-    this.isOpen = false;
-    this.onToggle(false);
+    if (this.root.open) this.root.close();
   }
 }

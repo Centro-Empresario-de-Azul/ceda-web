@@ -11,9 +11,14 @@
     "command": "npm run build",
   },
 
-  // Custom domain, ready to enable once ceda.org.ar is delegated to Cloudflare — `wrangler
-  // deploy` creates the domain via the API, so it fails on a zone it can't find yet. Only
-  // www is listed; the apex redirects to www via a Cloudflare Redirect Rule ahead of Workers.
+  // Stand-in domain while an ARCA/NIC.AR administrative issue blocks registering
+  // ceda.org.ar. Only www is listed; the apex redirects to www via a Cloudflare Redirect
+  // Rule configured in the dashboard for this zone.
+  "routes": [{ "pattern": "www.centroempresariodeazul.org.ar", "custom_domain": true }],
+
+  // ceda.org.ar itself, ready to enable once it's delegated to Cloudflare — `wrangler
+  // deploy` creates the domain via the API, so it fails on a zone it can't find yet. Same
+  // www + apex-redirect convention as above.
   // "routes": [
   //   { "pattern": "www.ceda.org.ar", "custom_domain": true }
   // ],
