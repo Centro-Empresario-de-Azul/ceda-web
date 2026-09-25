@@ -6,6 +6,13 @@ import { Icon } from 'astro-icon/components';
 import { site, pageTitle } from '../../site';
 import { issues } from '../../data/magazine';
 import { coverFor } from '../../lib/magazine-covers';
+import {
+  pageSetFor,
+  pageSrcset,
+  pageTextsFor,
+  pageUrl,
+  textUrl,
+} from '../../lib/reader/page-images';
 
 export function getStaticPaths() {
   return issues.map((issue) => ({
@@ -19,6 +26,21 @@ const { issue } = Astro.props;
 const coverSource = coverFor(issue.cover);
 const cover = await getImage({ src: coverSource, width: 600, format: 'jpeg' });
 const coverHeight = Math.round((600 * coverSource.height) / coverSource.width);
+
+const pageSet = pageSetFor(issue.number);
+const pageCount = pageSet.ratios.length;
+if (pageCount !== issue.pages) {
+  throw new Error(
+    `Issue ${issue.number}: src/data/magazine.ts says ${issue.pages} pages, the rendered page images have ${pageCount}.`,
+  );
+}
+const smallest = pageSet.widths[0];
+const largest = pageSet.widths[pageSet.widths.length - 1];
+
+// The same text search uses, served in the page too: it is what a screen reader reads
+// and what a search engine indexes, since the pages themselves are images.
+const pageTexts = pageTextsFor(issue.number);
+const pageLabel = (page: number) => `Página ${page} de ${pageCount}`;
 ---
 
 <Base
@@ -33,8 +55,15 @@ const coverHeight = Math.round((600 * coverSource.height) / coverSource.width);
 >
   <PageHero eyebrow="Revista" title={`Número ${issue.number}`} lead={issue.headline} />
 
-  <section id="reader" class="mx-auto max-w-4xl px-5 py-12 md:py-16">
-    <div id="reader-controls" class="mb-6 flex flex-wrap items-center gap-4">
+  <section
+    id="reader"
+    class="mx-auto max-w-6xl px-5 py-10 md:py-14"
+    data-issue={issue.number}
+    data-page-count={pageCount}
+    data-text-url={textUrl(issue.number)}
+    data-zoom-width={largest}
+  >
+    <div class="mb-5 flex flex-wrap items-center gap-3">
       <input
         type="search"
         id="reader-search"
@@ -42,20 +71,21 @@ const coverHeight = Math.round((600 * coverSource.height) / coverSource.width);
         class="w-full rounded-full border border-muted/80 px-4 py-2 text-sm sm:w-72"
         aria-label="Buscar en esta edición"
       />
-
-      <div class="ml-auto flex items-center gap-3">
+      <div class="ml-auto flex items-center gap-2">
         <label for="reader-page-input" class="text-sm text-muted">Página</label>
         <input
           type="number"
           id="reader-page-input"
           min="1"
-          max={issue.pages}
-          class="w-20 rounded border border-muted/80 px-2 py-1 text-sm"
+          max={pageCount}
+          value="1"
+          class="w-16 rounded border border-muted/80 px-2 py-1 text-sm"
         />
+        <span class="text-sm text-muted">de {pageCount}</span>
         <button
           type="button"
           id="reader-zoom-button"
-          class="rounded border border-muted/80 px-3 py-1.5 text-navy transition-colors hover:bg-sky"
+          class="ml-1 rounded border border-muted/80 px-3 py-1.5 text-navy transition-colors hover:bg-sky"
           aria-label="Ampliar página"
         >
           <Icon name="lucide:zoom-in" class="size-4" aria-hidden="true" />
@@ -67,56 +97,83 @@ const coverHeight = Math.round((600 * coverSource.height) / coverSource.width);
       <ul id="reader-search-results" class="space-y-1 text-sm text-muted"></ul>
     </div>
 
-    <div
-      id="reader-container"
-      class="relative mx-auto h-[70vh] min-h-[420px]"
-      role="region"
-      aria-label={`Revista Imagen ${site.acronym} N.º ${issue.number}`}
-      data-pdf-url={issue.pdf}
-    >
+    <div id="reader-stage" class="reader-stage">
+      <ol
+        id="reader-pager"
+        class="reader-pager"
+        aria-label={`Revista Imagen ${site.acronym} N.º ${issue.number}`}
+        aria-roledescription="carrusel"
+      >
+        {
+          pageSet.ratios.map((ratio, i) => {
+            const page = i + 1;
+            return (
+              <li class="reader-slide" data-page={page} aria-label={pageLabel(page)}>
+                <img
+                  src={pageUrl(issue.number, page, smallest)}
+                  srcset={pageSrcset(pageSet, page)}
+                  sizes="(min-width: 1024px) and (min-aspect-ratio: 5/4) 50vw, 100vw"
+                  width={1080}
+                  height={Math.round(1080 * ratio)}
+                  alt={`Página ${page}`}
+                  loading={page <= 3 ? 'eager' : 'lazy'}
+                  fetchpriority={page === 1 ? 'high' : undefined}
+                  decoding="async"
+                  draggable="false"
+                />
+              </li>
+            );
+          })
+        }
+      </ol>
     </div>
 
-    <div id="reader-nav" class="mt-4 flex items-center justify-center gap-3">
+    <div class="mt-5 flex items-center justify-center gap-3">
       <button
         type="button"
         id="reader-prev"
-        class="inline-flex items-center gap-1.5 rounded border border-muted/80 px-3 py-1.5 text-sm text-navy transition-colors hover:bg-sky aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:bg-transparent"
+        class="inline-flex items-center gap-1.5 rounded-full border border-muted/80 px-4 py-2 text-sm font-semibold text-navy transition-colors hover:bg-sky aria-disabled:cursor-not-allowed aria-disabled:opacity-40 aria-disabled:hover:bg-transparent"
         aria-disabled="true"
       >
         <Icon name="lucide:chevron-left" class="size-4" aria-hidden="true" />
         Anterior
       </button>
+      <p id="reader-status" class="min-w-28 text-center text-sm text-muted" aria-live="polite">
+        {pageLabel(1)}
+      </p>
       <button
         type="button"
         id="reader-next"
-        class="inline-flex items-center gap-1.5 rounded border border-muted/80 px-3 py-1.5 text-sm text-navy transition-colors hover:bg-sky aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:bg-transparent"
-        aria-disabled="true"
+        class="inline-flex items-center gap-1.5 rounded-full border border-muted/80 px-4 py-2 text-sm font-semibold text-navy transition-colors hover:bg-sky aria-disabled:cursor-not-allowed aria-disabled:opacity-40 aria-disabled:hover:bg-transparent"
+        aria-disabled={pageCount > 1 ? 'false' : 'true'}
       >
         Siguiente
         <Icon name="lucide:chevron-right" class="size-4" aria-hidden="true" />
       </button>
     </div>
 
-    <p id="reader-error" class="mt-4 hidden text-center text-muted">
-      No pudimos cargar la vista previa online. Podés descargar el PDF más abajo.
-    </p>
-
-    <dialog
-      id="reader-zoom-lightbox"
-      class="m-0 h-dvh max-h-none w-dvw max-w-none items-center justify-center border-0 bg-black/90 p-6 open:flex"
-      aria-label="Página ampliada"
-    >
-      <button
-        type="button"
-        data-zoom-close
-        class="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/25"
-        aria-label="Cerrar la vista ampliada"
-      >
-        <Icon name="lucide:x" class="size-6" aria-hidden="true" />
-      </button>
+    <dialog id="reader-zoom" class="reader-zoom" aria-label="Página ampliada">
+      <div class="reader-zoom-bar">
+        <button type="button" data-zoom-prev aria-label="Página anterior">
+          <Icon name="lucide:chevron-left" class="size-5" aria-hidden="true" />
+        </button>
+        <p data-zoom-status class="text-sm"></p>
+        <button type="button" data-zoom-next aria-label="Página siguiente">
+          <Icon name="lucide:chevron-right" class="size-5" aria-hidden="true" />
+        </button>
+        <span class="mx-2 h-5 w-px bg-white/25" aria-hidden="true"></span>
+        <button type="button" data-zoom-out aria-label="Alejar">−</button>
+        <button type="button" data-zoom-in aria-label="Acercar">+</button>
+        <button type="button" data-zoom-close class="ml-auto" aria-label="Cerrar la vista ampliada">
+          <Icon name="lucide:x" class="size-5" aria-hidden="true" />
+        </button>
+      </div>
+      <div class="reader-zoom-viewport" data-zoom-viewport>
+        <img alt="" decoding="async" />
+      </div>
     </dialog>
 
-    <div class="mt-8 text-center">
+    <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
       <a
         href={issue.pdf}
         download={`Imagen ${site.acronym} ${issue.number} (web).pdf`}
@@ -126,113 +183,133 @@ const coverHeight = Math.round((600 * coverSource.height) / coverSource.width);
         Descargar en PDF
       </a>
     </div>
+
+    <details
+      class="mx-auto mt-10 max-w-3xl rounded-2xl border border-sky-2 px-6 py-4"
+      data-magazine-text
+    >
+      <summary class="cursor-pointer font-semibold text-navy">Leer el texto de esta edición</summary
+      >
+      <div class="mt-4 space-y-6 text-sm leading-relaxed text-muted">
+        {
+          pageTexts
+            .filter((p) => p.text)
+            .map((p) => (
+              <section>
+                <h2 class="eyebrow text-orange-deep">Página {p.page}</h2>
+                <p class="mt-2">{p.text}</p>
+              </section>
+            ))
+        }
+      </div>
+    </details>
   </section>
 
   <script>
-    import { loadPdf, getPageCount } from '../../lib/reader/pdf-engine';
-    import { FlipbookReader } from '../../lib/reader/flipbook-reader';
-    import { SearchIndex, MIN_QUERY_LENGTH } from '../../lib/reader/search-index';
-    import { ZoomLightbox } from '../../lib/reader/zoom-lightbox';
+    import { SlidePager, SPREAD_QUERY } from '../../lib/reader/pager';
+    import { createPageTurn } from '../../lib/reader/page-turn';
     import { bindReaderNavigation } from '../../lib/reader/reader-navigation';
+    import { ZoomLightbox } from '../../lib/reader/zoom-lightbox';
+    import { SearchIndex, MIN_QUERY_LENGTH, type PageText } from '../../lib/reader/search-index';
+    import { pageUrl } from '../../lib/reader/page-urls';
+    import { readerHash, pageFromHash } from '../../lib/reader/reader-hash';
 
-    // Reader interactions fire promises without awaiting them (the click/input handler
-    // can't be async-blocking), so failures need an explicit sink instead of going unhandled.
-    const reportError = (context: string) => (err: unknown) => console.error(context, err);
+    const root = document.getElementById('reader');
+    const scroller = document.getElementById('reader-pager');
+    const stage = document.getElementById('reader-stage');
+    const pageInput = document.getElementById('reader-page-input') as HTMLInputElement | null;
+    const status = document.getElementById('reader-status');
+    const prev = document.getElementById('reader-prev');
+    const next = document.getElementById('reader-next');
 
-    async function boot(): Promise<void> {
-      const container = document.getElementById('reader-container');
-      const errorEl = document.getElementById('reader-error');
-      const controls = document.getElementById('reader-controls');
-      const nav = document.getElementById('reader-nav');
-      const pageInput = document.getElementById('reader-page-input') as HTMLInputElement | null;
-      if (!container || !pageInput) return;
+    if (root && scroller && stage && pageInput && status && prev && next) {
+      const issue = Number(root.dataset.issue);
+      const pageCount = Number(root.dataset.pageCount);
+      const zoomWidth = Number(root.dataset.zoomWidth);
+      const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
-      const pdfUrl = container.dataset.pdfUrl;
-      if (!pdfUrl) return;
+      const pager = new SlidePager(scroller, {
+        spreadQuery: matchMedia(SPREAD_QUERY),
+        prefersReducedMotion: () => reducedMotion.matches,
+        // The fold is a mouse-and-keyboard flourish; touch keeps the native swipe.
+        turnEffect: matchMedia('(pointer: fine)').matches ? createPageTurn(stage) : undefined,
+      });
 
-      try {
-        const doc = await loadPdf(pdfUrl);
-        const pageCount = getPageCount(doc);
-        pageInput.max = String(pageCount);
+      const describe = () => {
+        const pages = pager.getVisiblePages();
+        const label = pages.length > 1 ? `Páginas ${pages[0]}–${pages[1]}` : `Página ${pages[0]}`;
+        status.textContent = `${label} de ${pageCount}`;
+        pageInput.value = String(pages[0]);
+        history.replaceState(null, '', readerHash(pages[0]));
+      };
+      pager.onPageChange(describe);
+      bindReaderNavigation(root, prev, next, pager);
 
-        const reader = new FlipbookReader(container, doc, pageCount);
-        await reader.init();
+      const linked = pageFromHash(location.hash, pageCount);
+      if (linked) pager.goToPage(linked, true);
 
-        pageInput.value = String(reader.getCurrentPage());
-        reader.onPageChange((page) => {
-          pageInput.value = String(page);
+      pageInput.addEventListener('change', () => pager.goToPage(Number(pageInput.value), true));
+
+      const zoomRoot = document.getElementById('reader-zoom');
+      const zoomButton = document.getElementById('reader-zoom-button');
+      if (zoomRoot instanceof HTMLDialogElement && zoomButton) {
+        const zoom = new ZoomLightbox(
+          zoomRoot,
+          {
+            pageCount,
+            srcFor: (page) => pageUrl(issue, page, zoomWidth),
+            altFor: (page) => `Página ${page} de ${pageCount}, ampliada`,
+          },
+          zoomButton,
+          (page) => pager.goToPage(page, true),
+        );
+        zoomButton.addEventListener('click', () => zoom.open(pager.getCurrentPage()));
+        // Tapping a page opens it large. A swipe never fires click, so paging is unaffected.
+        scroller.addEventListener('click', (event) => {
+          const slide = (event.target as HTMLElement).closest<HTMLElement>('[data-page]');
+          if (slide) zoom.open(Number(slide.dataset.page));
         });
-
-        pageInput.addEventListener('change', () => {
-          const page = Number(pageInput.value);
-          if (Number.isInteger(page)) reader.goToPage(page).catch(reportError('goToPage failed'));
-        });
-
-        const readerRoot = document.getElementById('reader');
-        const prevButton = document.getElementById('reader-prev');
-        const nextButton = document.getElementById('reader-next');
-        if (readerRoot && prevButton && nextButton) {
-          bindReaderNavigation(readerRoot, prevButton, nextButton, reader);
-        }
-
-        const lightboxRoot = document.getElementById('reader-zoom-lightbox');
-        const zoomButton = document.getElementById('reader-zoom-button');
-        if (lightboxRoot instanceof HTMLDialogElement && zoomButton) {
-          const lightbox = new ZoomLightbox(
-            lightboxRoot,
-            (open) => reader.setGesturesEnabled(!open),
-            zoomButton,
-          );
-          zoomButton.addEventListener('click', () => {
-            lightbox.open(doc, reader.getCurrentPage()).catch(reportError('Zoom open failed'));
-          });
-        }
-
-        const searchIndex = new SearchIndex(doc, pageCount);
-        const searchInput = document.getElementById('reader-search') as HTMLInputElement | null;
-        const resultsWrap = document.getElementById('reader-search-results-wrap');
-        const resultsList = document.getElementById('reader-search-results');
-        searchInput?.addEventListener('input', () => {
-          (async () => {
-            if (!resultsList) return;
-            if (searchInput.value.trim().length < MIN_QUERY_LENGTH) {
-              resultsList.innerHTML = '';
-              resultsWrap?.classList.remove('is-open');
-              return;
-            }
-
-            await searchIndex.whenReady();
-            const results = searchIndex.search(searchInput.value);
-            resultsList.innerHTML = '';
-            resultsWrap?.classList.toggle('is-open', results.length > 0);
-            for (const result of results) {
-              const li = document.createElement('li');
-              // A button, not a click handler on the <li>: natively focusable and
-              // activatable with Enter/Space, no ARIA needed.
-              const button = document.createElement('button');
-              button.type = 'button';
-              button.textContent = `Página ${result.page}: ${result.snippet}`;
-              button.className = 'w-full cursor-pointer text-left hover:text-navy';
-              button.addEventListener('click', () =>
-                reader.goToPage(result.page).catch(reportError('goToPage failed')),
-              );
-              li.appendChild(button);
-              resultsList.appendChild(li);
-            }
-          })().catch(reportError('Search failed'));
-        });
-      } catch {
-        // Replace the reader with the message rather than leaving dead controls beside an
-        // empty canvas area. The download button below stays untouched.
-        errorEl?.classList.remove('hidden');
-        container.classList.add('hidden');
-        controls?.classList.add('hidden');
-        nav?.classList.add('hidden');
-        document.getElementById('reader-search-results-wrap')?.classList.remove('is-open');
       }
-    }
 
-    void boot();
+      const search = new SearchIndex(async () => {
+        const response = await fetch(root.dataset.textUrl ?? '');
+        if (!response.ok) throw new Error(`texto.json ${response.status}`);
+        return (await response.json()) as PageText[];
+      });
+      const searchInput = document.getElementById('reader-search') as HTMLInputElement | null;
+      const resultsWrap = document.getElementById('reader-search-results-wrap');
+      const resultsList = document.getElementById('reader-search-results');
+      // Fetch on focus, so the text is usually in hand by the time a word is typed.
+      searchInput?.addEventListener('focus', () => search.whenReady().catch(() => {}), {
+        once: true,
+      });
+      searchInput?.addEventListener('input', () => {
+        (async () => {
+          if (!resultsList) return;
+          if (searchInput.value.trim().length < MIN_QUERY_LENGTH) {
+            resultsList.innerHTML = '';
+            resultsWrap?.classList.remove('is-open');
+            return;
+          }
+          await search.whenReady();
+          const results = search.search(searchInput.value);
+          resultsList.innerHTML = '';
+          resultsWrap?.classList.toggle('is-open', results.length > 0);
+          for (const result of results) {
+            const li = document.createElement('li');
+            // A button, not a click handler on the <li>: natively focusable and
+            // activatable with Enter/Space, no ARIA needed.
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = `Página ${result.page}: ${result.snippet}`;
+            button.className = 'w-full cursor-pointer text-left hover:text-navy';
+            button.addEventListener('click', () => pager.goToPage(result.page));
+            li.appendChild(button);
+            resultsList.appendChild(li);
+          }
+        })().catch((err: unknown) => console.error('Search failed', err));
+      });
+    }
   </script>
 
   <style>

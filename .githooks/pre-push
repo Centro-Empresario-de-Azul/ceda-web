@@ -31,8 +31,11 @@ for (const page of pages) {
   const html = readFileSync("dist/" + page, "utf8");
 
   // Astro strips the newline between text and an adjacent element, fusing words
-  // ("solo.Desde"). Valid HTML, wrong copy — only visible in the output.
-  const body = html.slice(html.indexOf("<body"));
+  // ("solo.Desde"). Valid HTML, wrong copy — only visible in the output. The magazine text
+  // on /revista/<n> is excluded: it is the issue verbatim, old phone numbers and all.
+  const body = html
+    .slice(html.indexOf("<body"))
+    .replace(/<details[^>]*data-magazine-text[\s\S]*?<\/details>/g, "");
   for (const m of body.matchAll(/<(p|li|dd|dt|h[1-4]|a)\b[^>]*>(.*?)<\/\1>/gs)) {
     if (/<(p|div|section|ul|ol)\b/.test(m[2])) continue;
     const text = m[2].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
@@ -60,10 +63,10 @@ for (const page of pages) {
     [/42-?4028/, "retired landline 02281 42-4028"],
     [/47-?7297/, "retired number 2281 47-7297"],
   ]) {
-    if (re.test(html)) fail(page + ": " + label);
+    if (re.test(body)) fail(page + ": " + label);
   }
-  if (html.includes("bit.ly")) fail(page + ": bit.ly shortener — link the destination directly");
-  if (/entidad gremial/i.test(html)) fail(page + ": CEDA is a cámara empresarial, not an entidad gremial");
+  if (body.includes("bit.ly")) fail(page + ": bit.ly shortener — link the destination directly");
+  if (/entidad gremial/i.test(body)) fail(page + ": CEDA is a cámara empresarial, not an entidad gremial");
 }
 
 // public/ is copied verbatim, so anything that lands in it ships — including junk the

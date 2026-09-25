@@ -236,39 +236,185 @@
     background-size: 100% 2px;
   }
 
-  /* Magazine reader (StPageFlip + pdf.js): each leaf is a canvas the reader lazily
-     renders into, sized to fill the flip surface StPageFlip computes for it. */
-  .reader-page {
+  /* Magazine reader: a native horizontal scroll-snap strip of page images. The browser
+     does the swiping, momentum and snapping; nothing here moves the window. */
+  .reader-stage {
     position: relative;
+    container-type: inline-size;
+    --page-ratio: 1.4186;
+  }
+
+  .reader-pager {
+    display: flex;
+    height: max(20rem, min(calc(100cqi * var(--page-ratio)), calc(100svh - 13rem)));
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    /* The browser decides between a swipe and a pinch; zoom is never blocked. */
+    touch-action: pan-x pan-y pinch-zoom;
+    border-radius: 0.75rem;
+  }
+
+  .reader-pager::-webkit-scrollbar {
+    display: none;
+  }
+
+  .reader-slide {
+    display: flex;
+    flex: 0 0 100%;
+    align-items: center;
+    justify-content: center;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+  }
+
+  .reader-slide img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
     background: #fff;
+    box-shadow: 0 18px 40px -24px rgb(13 27 54 / 0.55);
+    cursor: zoom-in;
+    user-select: none;
   }
 
-  .reader-page-canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+  /* Two-page spreads — keep in step with SPREAD_QUERY in src/lib/reader/pager.ts. The
+     cover sits alone in the middle; after it, even pages open a spread on the left. */
+  @media (min-width: 1024px) and (min-aspect-ratio: 5/4) {
+    .reader-pager {
+      height: max(24rem, min(calc(50cqi * var(--page-ratio)), calc(100svh - 13rem)));
+    }
+
+    .reader-slide {
+      flex-basis: 50%;
+      scroll-snap-align: none;
+      scroll-snap-stop: normal;
+    }
+
+    .reader-slide:first-child {
+      margin-inline: 25%;
+      scroll-snap-align: center;
+      scroll-snap-stop: always;
+    }
+
+    .reader-slide:nth-child(even) {
+      justify-content: flex-end;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+    }
+
+    .reader-slide:nth-child(odd):not(:first-child) {
+      justify-content: flex-start;
+    }
   }
 
-  .reader-page-number {
+  /* The desktop page turn (src/lib/reader/page-turn.ts). */
+  .page-turn-still,
+  .page-turn-leaf {
     position: absolute;
-    bottom: 0.6rem;
-    left: 50%;
-    translate: -50% 0;
-    padding: 0.2rem 0.55rem;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--color-navy) 70%, transparent);
-    color: #fff;
-    font-size: 0.7rem;
-    line-height: 1;
+    z-index: 5;
     pointer-events: none;
   }
 
-  .zoom-lightbox-canvas {
-    display: block;
+  .page-turn-leaf {
+    transform-style: preserve-3d;
+  }
+
+  .page-turn-face {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+  }
+
+  .page-turn-back {
+    transform: rotateY(180deg);
+  }
+
+  .page-turn-shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, rgb(0 0 0 / 0.35), transparent 60%);
+    backface-visibility: hidden;
+    opacity: 0;
+  }
+
+  /* Zoom: a full-screen dialog whose viewport scrolls natively for panning. */
+  .reader-zoom {
+    width: 100dvw;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: rgb(8 14 28 / 0.96);
+    color: #fff;
+  }
+
+  .reader-zoom[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .reader-zoom-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid rgb(255 255 255 / 0.12);
+  }
+
+  .reader-zoom-bar button {
+    display: grid;
+    place-items: center;
+    min-width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    font-size: 1.25rem;
+    transition: background-color 0.2s ease;
+  }
+
+  .reader-zoom-bar button:hover {
+    background: rgb(255 255 255 / 0.12);
+  }
+
+  .reader-zoom-viewport {
+    flex: 1;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .reader-zoom-viewport img {
+    display: inline-block;
+    background: #fff;
+    cursor: zoom-in;
+  }
+
+  .reader-zoom[data-zoom='fit'] .reader-zoom-viewport {
+    display: grid;
+    place-items: center;
+  }
+
+  .reader-zoom[data-zoom='fit'] .reader-zoom-viewport img {
     max-width: 100%;
     max-height: 100%;
-    margin: auto;
+  }
+
+  .reader-zoom[data-zoom='width'] .reader-zoom-viewport img {
+    width: 100%;
+    max-width: 1100px;
+  }
+
+  .reader-zoom[data-zoom='double'] .reader-zoom-viewport img {
+    width: 200%;
+    max-width: 2200px;
+    cursor: zoom-out;
   }
 }
 

@@ -23,7 +23,8 @@ Asset generators, run by hand when a source changes — they overwrite files in 
 
 - `node scripts/prepare-logo.mjs` — logo, favicons, PWA icons
 - `node scripts/generate-og.mjs` — Open Graph card
-- `node scripts/prepare-magazine.mjs <pdf> <number>` — a magazine issue
+- `node scripts/prepare-magazine.mjs <pdf> <number>` — a magazine issue: download PDF,
+  cover, and (via `render-magazine-pages.mjs`) the reader's page images and text
 
 ## Where things live
 
@@ -40,6 +41,11 @@ Asset generators, run by hand when a source changes — they overwrite files in 
   only place `rel="noopener noreferrer"` is written.
 - `/revista` grids the newest issue's year and folds earlier years into native `<details>`.
   No collapsible-section library — the CSP would block one anyway.
+- The reader (`/revista/<n>`) is a native scroll-snap strip of pre-rendered WebP pages
+  (`src/lib/reader/`): one page per view on phones, cover + two-page spreads on wide
+  screens, a CSS 3D page turn for mouse/keyboard turns only. No pdf.js and no page-flip
+  library at runtime — the old StPageFlip reader reordered DOM nodes mid-turn and jumped
+  the window on every page. Render pages from the **original** PDF, not the -web copy.
 - `src/pages/` — `index` · `nosotros` · `programas` · `beneficios` · `revista` ·
   `contacto` · `404`.
 - `public/` is passthrough and unfingerprinted; `dist/` is the build output wrangler

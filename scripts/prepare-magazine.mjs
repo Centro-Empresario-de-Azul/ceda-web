@@ -1,6 +1,9 @@
-// Compresses a Revista Imagen CEDA issue and extracts its cover. Losslessly-exported
-// CorelDRAW PDFs run ~58MB; ghostscript re-encodes images but keeps text vector, ~2.5MB.
-// Usage: node scripts/prepare-magazine.mjs <source.pdf> <issue-number> [--force] (requires ghostscript)
+// Prepares a Revista Imagen CEDA issue: the compressed PDF for download, the cover, and
+// (via render-magazine-pages.mjs) the page images and text the online reader uses.
+// Losslessly-exported CorelDRAW PDFs run ~58MB; ghostscript re-encodes images but keeps
+// text vector, ~2.5MB.
+// Usage: node scripts/prepare-magazine.mjs <source.pdf> <issue-number> [--force]
+// Requires ghostscript and poppler (brew install ghostscript poppler).
 
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, statSync, unlinkSync } from 'node:fs';
@@ -92,4 +95,17 @@ const pages = execFileSync(
   { encoding: 'utf8' },
 ).trim();
 console.log(`pages  ${pages}`);
+
+// The online reader shows pre-rendered page images, made from the original for sharpness.
+execFileSync(
+  process.execPath,
+  [
+    join(root, 'scripts/render-magazine-pages.mjs'),
+    src,
+    String(issue),
+    ...(force ? ['--force'] : []),
+  ],
+  { stdio: 'inherit' },
+);
+
 console.log(`\nNow add issue ${issue} to src/data/magazine.ts with pages: ${pages}`);

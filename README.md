@@ -13,7 +13,7 @@ Las convenciones del proyecto están en [`CLAUDE.md`](./CLAUDE.md).
 ## Empezar
 
 Requiere **Node ≥ 22.12** (lo pide Astro 7; hay un `.nvmrc` con la versión que usamos) y,
-solo para preparar revistas, **Ghostscript** (`brew install ghostscript`).
+solo para preparar revistas, **Ghostscript** y **Poppler** (`brew install ghostscript poppler`).
 
 ```bash
 npm install
@@ -73,9 +73,22 @@ fecha está mal escrita, el build falla y dice cuál es. No hace falta revisarlo
 node scripts/prepare-magazine.mjs ~/Downloads/<archivo>.pdf 317
 ```
 
-Comprime el PDF —el original ronda los 58 MB, queda en ~2,5 MB sin perder el texto— y
-extrae la tapa. Después agregá la edición arriba de todo en `src/data/magazine.ts`.
-Requiere Ghostscript (`brew install ghostscript`).
+Usá el PDF **original** que manda CEDA. El script:
+
+- comprime el PDF para descargar (el original ronda los 58 MB, queda en ~2,5 MB),
+- extrae la tapa,
+- convierte cada página en imágenes WebP (640, 1080 y 1600 px) en
+  `public/revista/paginas/<número>/`, más el texto de cada página (`texto.json`) para el
+  buscador, y guarda las proporciones en `src/data/magazine-pages/<número>.json`.
+
+Tarda ~30 segundos por edición. Después agregá la edición arriba de todo en
+`src/data/magazine.ts`, con la cantidad de páginas que indica el script (el build falla si
+no coinciden).
+
+El lector online muestra esas imágenes: no carga el PDF ni pdf.js. En el celular las
+páginas se pasan deslizando; en la compu se ven de a dos, como la revista impresa. Para
+volver a generar solo las imágenes: `node scripts/render-magazine-pages.mjs <pdf> <número>
+--force`.
 
 ### Publicar una charla o jornada
 
