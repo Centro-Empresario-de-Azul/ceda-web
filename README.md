@@ -90,6 +90,22 @@ páginas se pasan deslizando; en la compu se ven de a dos, como la revista impre
 volver a generar solo las imágenes: `node scripts/render-magazine-pages.mjs <pdf> <número>
 --force`.
 
+#### Sin instalar nada: desde GitHub
+
+Si solo necesitás la versión reducida, GitHub la genera:
+
+1. En el repo, **Releases → Draft a new release**.
+2. Tag: `revista-<número>` (por ejemplo `revista-319`). Adjuntá el PDF original (hasta
+   2 GB) y tocá **Publish release**.
+3. En unos minutos el workflow _Reduce magazine_ (pestaña **Actions**) reemplaza en la
+   release el PDF original por `imagen-ceda-<número>-web.pdf` y la tapa, listos para
+   descargar.
+
+Esto no publica nada en el sitio. El run guarda además el artifact
+`revista-<número>-sitio`, con el PDF, la tapa, las páginas y el texto en sus rutas del repo:
+descomprimilo en la raíz y agregá la edición a `src/data/magazine.ts`. Las releases son
+públicas, como el sitio; cuando ya no la necesites, podés borrarla.
+
 ### Publicar una charla o jornada
 
 Agregá la actividad en `src/data/events.ts` con la fecha, el horario y el lugar tal como

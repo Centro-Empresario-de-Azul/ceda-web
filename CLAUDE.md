@@ -24,7 +24,8 @@ Asset generators, run by hand when a source changes — they overwrite files in 
 - `node scripts/prepare-logo.mjs` — logo, favicons, PWA icons
 - `node scripts/generate-og.mjs` — Open Graph card
 - `node scripts/prepare-magazine.mjs <pdf> <number>` — a magazine issue: download PDF,
-  cover, and (via `render-magazine-pages.mjs`) the reader's page images and text
+  cover, and (via `render-magazine-pages.mjs`) the reader's page images and text. The
+  `reduce-magazine` workflow runs it in CI for a release tagged `revista-<number>`
 
 ## Where things live
 
