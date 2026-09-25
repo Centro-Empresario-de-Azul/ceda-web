@@ -8,6 +8,7 @@ import BusinessDirectory from '../components/BusinessDirectory.astro';
 import EventFeature from '../components/EventFeature.astro';
 import { site, pageTitle } from '../site';
 import asambleaImg from '../assets/img/asamblea.jpg';
+import heroImg from '../assets/img/reunion-sede.jpg';
 import { upcoming } from '../data/events';
 ---
 
@@ -19,6 +20,7 @@ import { upcoming } from '../data/events';
     eyebrow="Programas e iniciativas"
     title="Lo que CEDA está haciendo ahora"
     lead="Revitalización del centro y visibilidad para las empresas de Azul."
+    image={heroImg}
   />
 
   {
@@ -66,7 +68,7 @@ import { upcoming } from '../data/events';
   <BusinessDirectory tone="sky" detailed />
 
   <section class="mx-auto max-w-6xl px-5 py-20 md:py-28">
-    <article class="reveal rounded-2xl border border-sky-2 bg-white p-8 md:p-12">
+    <article class="reveal card p-8 md:p-12">
       <SectionHeader eyebrow="Comunidad" title="Azul Mueve" />
       <p class="mt-4 max-w-2xl leading-relaxed text-muted">
         Las historias de quienes producen, emprenden y dan trabajo en Azul, contadas por sus

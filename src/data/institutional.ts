@@ -1,10 +1,24 @@
 import { z } from 'zod';
 import { site } from '../site';
 
+/** Benefit categories, in filter order, with the icon each one shows. */
+export const benefitTags = {
+  Sede: 'lucide:building-2',
+  Pagos: 'lucide:credit-card',
+  Bancos: 'lucide:landmark',
+  Seguros: 'lucide:shield-check',
+  Logística: 'lucide:truck',
+  Servicios: 'lucide:briefcase',
+  Bienestar: 'lucide:dumbbell',
+  Comunicación: 'lucide:megaphone',
+} as const;
+
+export type BenefitTag = keyof typeof benefitTags;
+
 const benefitSchema = z.object({
   name: z.string().min(1),
   body: z.string().min(1),
-  tag: z.string().min(1),
+  tag: z.enum(Object.keys(benefitTags) as [BenefitTag, ...BenefitTag[]]),
   /** Shown in the short teaser on the home page. */
   featured: z.boolean().optional(),
 });
@@ -161,6 +175,11 @@ export const benefits = z.array(benefitSchema).parse([
 /** The handful named on the home page. Never a second copy of the text. */
 export const featuredBenefits = benefits.filter((b) => b.featured);
 
+/** Only the categories that currently have a benefit, in `benefitTags` order. */
+export const usedBenefitTags = (Object.keys(benefitTags) as BenefitTag[]).filter((tag) =>
+  benefits.some((b) => b.tag === tag),
+);
+
 // From CEDA's own "Sumate al CEDA" page in Revista Imagen CEDA N.º 318. The fee is CEDA's
 // published rate, unlike event prices; update it from the latest issue.
 export const membership = z
@@ -168,6 +187,7 @@ export const membership = z
     audience: z.array(z.string().min(1)).nonempty(),
     reasons: z.array(z.string().min(1)).nonempty(),
     fee: z.string().min(1),
+    feePeriod: z.string().min(1),
     feeSource: z.object({ label: z.string().min(1), href: z.string().startsWith('/') }),
   })
   .parse({
@@ -179,7 +199,8 @@ export const membership = z
       'Participación en ferias, eventos y actividades.',
       'Networking con otros actores del ecosistema local.',
     ],
-    fee: '$4.000 por mes',
+    fee: '$4.000',
+    feePeriod: 'por mes',
     feeSource: { label: 'Revista Imagen CEDA N.º 318, septiembre 2026', href: '/revista/318' },
   });
 

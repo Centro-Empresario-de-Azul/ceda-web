@@ -156,6 +156,63 @@
     opacity: 1;
   }
 
+  /* The one card surface. Lifts on hover only when it is (or holds) a link, so static
+     cards don't pretend to be clickable. */
+  .card {
+    border-radius: 1rem;
+    border: 1px solid var(--color-sky-2);
+    background: #fff;
+    transition:
+      box-shadow 0.25s ease,
+      translate 0.25s ease,
+      border-color 0.25s ease;
+  }
+
+  .card:is(a, :has(a)):hover {
+    translate: 0 -3px;
+    border-color: color-mix(in srgb, var(--color-navy) 25%, var(--color-sky-2));
+    box-shadow: 0 18px 40px -22px rgb(28 58 112 / 0.45);
+  }
+
+  /* Front-page tiles: flat colour fields rather than bordered cards, like the blocks on
+     CEDA's flyers. The angled orange notch echoes the diagonals of the slash band. */
+  .tile {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.25rem;
+    padding: 1.75rem;
+    transition:
+      translate 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+
+  .tile::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 1.75rem;
+    width: 2.75rem;
+    height: 0.5rem;
+    background: var(--color-orange);
+    clip-path: polygon(18% 0, 100% 0, 82% 100%, 0 100%);
+  }
+
+  .tile:is(a, :has(a)):hover {
+    translate: 0 -3px;
+    box-shadow: 0 22px 44px -24px rgb(13 27 54 / 0.6);
+  }
+
+  /* Big figures in the stats band. */
+  .stat-figure {
+    font-family: var(--font-display);
+    font-variation-settings:
+      'wdth' 80,
+      'wght' 800;
+    font-size: clamp(2.75rem, 6vw, 4.25rem);
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+  }
+
   .link-underline {
     background-image: linear-gradient(var(--color-orange), var(--color-orange));
     background-size: 0% 2px;
@@ -273,5 +330,17 @@
   }
   to {
     transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .tile {
+    transition: none;
+  }
+
+  .card:hover,
+  .tile:hover {
+    translate: none !important;
   }
 }
