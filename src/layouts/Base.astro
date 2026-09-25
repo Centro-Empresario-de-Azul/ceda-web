@@ -35,14 +35,20 @@ const organization = {
   telephone: site.whatsappE164,
   address: {
     '@type': 'PostalAddress',
+    '@id': `${site.origin}/#direccion`,
     streetAddress: site.street,
     addressLocality: site.city,
     addressRegion: site.region,
     postalCode: site.postalCode,
     addressCountry: site.country,
   },
-  geo: { '@type': 'GeoCoordinates', latitude: site.latitude, longitude: site.longitude },
-  hasMap: site.maps,
+  // geo and hasMap belong to a Place, not to the Organization itself.
+  location: {
+    '@type': 'Place',
+    address: { '@id': `${site.origin}/#direccion` },
+    geo: { '@type': 'GeoCoordinates', latitude: site.latitude, longitude: site.longitude },
+    hasMap: site.maps,
+  },
   areaServed: { '@type': 'City', name: `${site.city}, ${site.region}, Argentina` },
   memberOf: site.affiliations.map((a) => ({
     '@type': 'Organization',
@@ -114,7 +120,7 @@ const schema = {
     <meta property="og:site_name" content={site.name} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonical} />
+    {noindex || <meta property="og:url" content={canonical} />}
     <meta property="og:locale" content="es_AR" />
     <meta property="og:image" content={og.src} />
     <meta property="og:image:width" content={String(og.width)} />
@@ -135,11 +141,7 @@ const schema = {
 
     <header class="sticky top-0 z-50 bg-navy shadow-[0_1px_0_rgba(255,255,255,0.12)]">
       <nav class="mx-auto flex max-w-6xl items-center gap-4 px-5 py-3" aria-label="Principal">
-        <a
-          href="/"
-          class:list={['flex shrink-0 items-center', path === '/' && 'nav-logo-reveal']}
-          aria-label={`${site.name} — inicio`}
-        >
+        <a href="/" class="flex shrink-0 items-center" aria-label={`${site.name} — inicio`}>
           <img
             src="/img/logo-white.png"
             alt={site.name}

@@ -31,3 +31,9 @@ export function checkAssetSize(bytes, max = MAX_ASSET_BYTES) {
 
 // PostScript string literal: backslash and parentheses are the only characters that break it.
 export const psString = (s) => `(${s.replace(/[\\()]/g, (c) => `\\${c}`)})`;
+
+// The reduce-magazine workflow takes the issue number from a release tag like `revista-319`.
+export function issueFromTag(tag) {
+  const match = /^revista-([1-9]\d*)$/.exec(tag.trim());
+  return match ? match[1] : null;
+}

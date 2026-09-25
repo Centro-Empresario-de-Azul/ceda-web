@@ -1,0 +1,93 @@
+# Reduces a raw magazine PDF attached to a release tagged `revista-<number>`. The raw file
+# is replaced on the release by the web PDF and the cover; the full set of site files
+# (PDF, cover, page images, reader text) is kept as a run artifact. See README.
+name: Reduce magazine
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reduce-magazine-${{ github.event.release.tag_name }}
+
+jobs:
+  reduce:
+    if: startsWith(github.event.release.tag_name, 'revista-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.event.release.tag_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ghostscript poppler-utils
+          npm ci --ignore-scripts
+
+      - name: Read issue number
+        id: issue
+        run: |
+          number=$(node --input-type=module -e "
+            import { issueFromTag } from './scripts/lib/magazine-args.mjs';
+            console.log(issueFromTag(process.env.TAG) ?? '');
+          ")
+          if [ -z "$number" ]; then
+            echo "::error::Tag must look like revista-319, got $TAG"
+            exit 1
+          fi
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+
+      - name: Download the raw PDF
+        id: raw
+        env:
+          N: ${{ steps.issue.outputs.number }}
+        run: |
+          mapfile -t pdfs < <(gh release view "$TAG" --json assets --jq '.assets[].name | select(test("\\.pdf$"; "i"))')
+          if [ "${#pdfs[@]}" -ne 1 ]; then
+            echo "::error::Attach exactly one PDF to the release (found ${#pdfs[@]})"
+            exit 1
+          fi
+          # A rerun after success finds only the reduced copy; reducing it again would render
+          # the page images from 150dpi and overwrite the good output with a blurrier one.
+          if [ "${pdfs[0]}" = "imagen-ceda-$N-web.pdf" ]; then
+            echo "::error::This release was already reduced. To redo it, delete its PDF and attach the original."
+            exit 1
+          fi
+          gh release download "$TAG" --pattern "${pdfs[0]}" --output "$RUNNER_TEMP/raw.pdf"
+          echo "name=${pdfs[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Reduce
+        run: node scripts/prepare-magazine.mjs "$RUNNER_TEMP/raw.pdf" "${{ steps.issue.outputs.number }}" --force
+
+      # Paths match the repo, so unzipping the artifact at the repo root puts every file in place.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: revista-${{ steps.issue.outputs.number }}-sitio
+          path: |
+            public/revista/imagen-ceda-${{ steps.issue.outputs.number }}-web.pdf
+            public/revista/paginas/${{ steps.issue.outputs.number }}/
+            src/assets/magazine/cover-${{ steps.issue.outputs.number }}.jpg
+            src/data/magazine-pages/${{ steps.issue.outputs.number }}.json
+
+      - name: Replace the raw PDF on the release
+        env:
+          N: ${{ steps.issue.outputs.number }}
+          RAW: ${{ steps.raw.outputs.name }}
+        run: |
+          gh release upload "$TAG" --clobber \
+            "public/revista/imagen-ceda-$N-web.pdf" \
+            "src/assets/magazine/cover-$N.jpg"
+          if [ "$RAW" != "imagen-ceda-$N-web.pdf" ]; then
+            gh release delete-asset "$TAG" "$RAW" --yes
+          fi

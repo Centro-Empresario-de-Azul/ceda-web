@@ -1,54 +1,94 @@
-import { renderPageToCanvas, type PdfDocument } from './pdf-engine';
+export interface ZoomSource {
+  pageCount: number;
+  /** The sharpest image for a page. */
+  srcFor(page: number): string;
+  altFor(page: number): string;
+}
 
-const ZOOM_SCALE = 3;
+/** Fit the screen, fill its width, then twice that. Panning is plain native scrolling. */
+export const ZOOM_LEVELS = ['fit', 'width', 'double'] as const;
+export type ZoomLevel = (typeof ZOOM_LEVELS)[number];
 
 // A native modal <dialog> supplies role, aria-modal, the focus trap and Escape-to-close.
 export class ZoomLightbox {
-  private canvas: HTMLCanvasElement;
+  private img: HTMLImageElement;
+  private viewport: HTMLElement;
   private closeButton: HTMLElement | null;
-  private opening: Promise<void> | null = null;
+  private status: HTMLElement | null;
+  private page = 1;
+  private level: ZoomLevel = 'fit';
 
   constructor(
     private root: HTMLDialogElement,
-    private onToggle: (open: boolean) => void,
+    private source: ZoomSource,
     private returnFocusTo?: HTMLElement,
+    private onPageChange?: (page: number) => void,
   ) {
-    this.canvas = document.createElement('canvas');
-    this.canvas.className = 'zoom-lightbox-canvas';
-    this.root.appendChild(this.canvas);
-    // Click on the backdrop (not the page itself) closes — the canvas is smaller than
-    // root, so a click that reaches root is always outside the rendered page.
-    this.root.addEventListener('click', (event) => {
-      if (event.target === this.root) this.close();
+    this.viewport = root.querySelector<HTMLElement>('[data-zoom-viewport]') ?? root;
+    this.img = this.viewport.querySelector('img') ?? this.viewport.appendChild(new Image());
+    this.closeButton = root.querySelector<HTMLElement>('[data-zoom-close]');
+    this.status = root.querySelector<HTMLElement>('[data-zoom-status]');
+
+    this.closeButton?.addEventListener('click', () => this.close());
+    root.querySelector('[data-zoom-in]')?.addEventListener('click', () => this.step(1));
+    root.querySelector('[data-zoom-out]')?.addEventListener('click', () => this.step(-1));
+    root
+      .querySelector('[data-zoom-prev]')
+      ?.addEventListener('click', () => this.show(this.page - 1));
+    root
+      .querySelector('[data-zoom-next]')
+      ?.addEventListener('click', () => this.show(this.page + 1));
+    this.img.addEventListener('dblclick', () => this.step(this.level === 'double' ? -2 : 1));
+    // A click on the dark surround (not the page, not a control) closes.
+    this.viewport.addEventListener('click', (event) => {
+      if (event.target === this.viewport) this.close();
     });
-    this.closeButton = this.root.querySelector<HTMLElement>('[data-zoom-close]');
-    this.closeButton?.addEventListener('click', () => {
-      this.close();
+    root.addEventListener('keydown', (event) => {
+      // Zoomed in, the arrows pan the enlarged page instead.
+      const paging = this.level === 'fit';
+      if (paging && event.key === 'ArrowLeft') {
+        event.preventDefault();
+        this.show(this.page - 1);
+      } else if (paging && event.key === 'ArrowRight') {
+        event.preventDefault();
+        this.show(this.page + 1);
+      } else if (event.key === '+' || event.key === '=') this.step(1);
+      else if (event.key === '-') this.step(-1);
     });
-    // Fires for close() and for Escape alike, so both restore state the same way.
-    this.root.addEventListener('close', () => {
-      this.onToggle(false);
-      this.returnFocusTo?.focus();
-    });
+    // Fires for close() and for Escape alike, so both restore focus the same way.
+    root.addEventListener('close', () => this.returnFocusTo?.focus());
   }
 
-  // Guards against a second render() starting on `canvas` before a first one (e.g. from a
-  // double-click) finishes — pdf.js throws if two renders overlap on the same canvas.
-  open(doc: PdfDocument, pageNumber: number): Promise<void> {
-    if (this.opening) return this.opening;
-    this.opening = renderPageToCanvas(doc, pageNumber, this.canvas, ZOOM_SCALE)
-      .then(() => {
-        if (!this.root.open) this.root.showModal();
-        this.closeButton?.focus();
-        this.onToggle(true);
-      })
-      .finally(() => {
-        this.opening = null;
-      });
-    return this.opening;
+  open(page: number): void {
+    this.setLevel('fit');
+    this.show(page);
+    if (!this.root.open) this.root.showModal();
+    this.closeButton?.focus();
   }
 
   close(): void {
     if (this.root.open) this.root.close();
+  }
+
+  private show(page: number): void {
+    const clamped = Math.min(Math.max(page, 1), this.source.pageCount);
+    if (clamped !== page && this.root.open) return;
+    this.page = clamped;
+    this.img.src = this.source.srcFor(clamped);
+    this.img.alt = this.source.altFor(clamped);
+    this.viewport.scrollTo?.({ top: 0, left: 0 });
+    if (this.status) this.status.textContent = `Página ${clamped} de ${this.source.pageCount}`;
+    this.onPageChange?.(clamped);
+  }
+
+  private step(delta: number): void {
+    const i = ZOOM_LEVELS.indexOf(this.level);
+    const next = ZOOM_LEVELS[Math.min(Math.max(i + delta, 0), ZOOM_LEVELS.length - 1)];
+    this.setLevel(next);
+  }
+
+  private setLevel(level: ZoomLevel): void {
+    this.level = level;
+    this.root.dataset.zoom = level;
   }
 }

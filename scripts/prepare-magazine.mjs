@@ -1,12 +1,16 @@
-// Compresses a Revista Imagen CEDA issue and extracts its cover. Losslessly-exported
-// CorelDRAW PDFs run ~58MB; ghostscript re-encodes images but keeps text vector, ~2.5MB.
-// Usage: node scripts/prepare-magazine.mjs <source.pdf> <issue-number> [--force] (requires ghostscript)
+// Prepares a Revista Imagen CEDA issue: the compressed PDF for download, the cover, and
+// (via render-magazine-pages.mjs) the page images and text the online reader uses.
+// Losslessly-exported CorelDRAW PDFs run ~58MB; ghostscript re-encodes images but keeps
+// text vector, ~2.5MB.
+// Usage: node scripts/prepare-magazine.mjs <source.pdf> <issue-number> [--force]
+// Requires ghostscript and poppler (brew install ghostscript poppler).
 
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, statSync, unlinkSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import { checkAssetSize, parseArgs, psString } from './lib/magazine-args.mjs';
+import { pagesDir } from './lib/magazine-pages.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -20,8 +24,17 @@ if (args.error) fail(args.error);
 const { issue, force } = args;
 const src = resolve(args.source);
 
-if (spawnSync('gs', ['--version']).error?.code === 'ENOENT') {
-  fail('Ghostscript (gs) not found. Install it: brew install ghostscript');
+// Every tool and every existing output is checked before anything is written, so a
+// missing dependency can't leave a half-prepared issue behind.
+for (const [tool, flag, pkg] of [
+  ['gs', '--version', 'ghostscript'],
+  ['pdftoppm', '-v', 'poppler'],
+  ['pdftotext', '-v', 'poppler'],
+  ['pdfinfo', '-v', 'poppler'],
+]) {
+  if (spawnSync(tool, [flag]).error?.code === 'ENOENT') {
+    fail(`${tool} not found. Install it: brew install ${pkg}`);
+  }
 }
 
 const pdfDir = join(root, 'public/revista');
@@ -35,7 +48,12 @@ mkdirSync(coverDir, { recursive: true });
 const pdfOut = join(pdfDir, `imagen-ceda-${issue}-web.pdf`);
 const coverOut = join(coverDir, `cover-${issue}.jpg`);
 
-const existing = [pdfOut, coverOut].filter((p) => existsSync(p));
+const existing = [
+  pdfOut,
+  coverOut,
+  join(root, 'public', pagesDir(issue)),
+  join(root, 'src/data/magazine-pages', `${issue}.json`),
+].filter((p) => existsSync(p));
 if (existing.length && !force) {
   fail(
     `Refusing to overwrite:\n${existing.map((p) => `  ${p.replace(root + '/', '')}`).join('\n')}\nRe-run with --force to replace them.`,
@@ -92,4 +110,17 @@ const pages = execFileSync(
   { encoding: 'utf8' },
 ).trim();
 console.log(`pages  ${pages}`);
+
+// The online reader shows pre-rendered page images, made from the original for sharpness.
+execFileSync(
+  process.execPath,
+  [
+    join(root, 'scripts/render-magazine-pages.mjs'),
+    src,
+    String(issue),
+    ...(force ? ['--force'] : []),
+  ],
+  { stdio: 'inherit' },
+);
+
 console.log(`\nNow add issue ${issue} to src/data/magazine.ts with pages: ${pages}`);

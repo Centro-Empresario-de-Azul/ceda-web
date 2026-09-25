@@ -1,4 +1,7 @@
-import { getPageText, type PdfDocument } from './pdf-engine';
+export interface PageText {
+  page: number;
+  text: string;
+}
 
 export interface SearchResult {
   page: number;
@@ -8,7 +11,15 @@ export interface SearchResult {
 const SNIPPET_RADIUS = 40;
 export const MIN_QUERY_LENGTH = 3;
 
-// Strips accents (á, ñ, ü…) so "azul" matches "Azuleño" and "Ano" matches "Año" alike.
+export const SEARCH_FAILED = 'No se pudo cargar el texto de la edición. Probá de nuevo.';
+
+/** What the reader's search announces once results are in. */
+export function searchSummary(pages: number, query: string): string {
+  if (pages === 0) return `Sin resultados para «${query}».`;
+  return pages === 1 ? '1 página con resultados.' : `${pages} páginas con resultados.`;
+}
+
+// Strips accents (á, ñ, ü…) so "comision" matches "Comisión" and "ano" matches "Año".
 function normalize(value: string): string {
   return value
     .normalize('NFD')
@@ -18,7 +29,7 @@ function normalize(value: string): string {
 
 interface NormalizedText {
   normalized: string;
-  // normalized[i] came from raw[map[i]] -- needed because a single raw character can
+  // normalized[i] came from raw[map[i]], both as UTF-16 indices -- needed because a single raw character can
   // normalize to zero characters (a lone combining mark), so the two strings can drift
   // out of alignment; without this map, slicing a snippet out of `raw` at a `normalized`
   // match index can land one or more characters off.
@@ -30,11 +41,14 @@ interface NormalizedText {
 function normalizeWithMap(raw: string): NormalizedText {
   let normalized = '';
   const map: number[] = [];
-  for (const [rawIndex, char] of Array.from(raw).entries()) {
-    for (const outChar of normalize(char)) {
-      normalized += outChar;
-      map.push(rawIndex);
-    }
+  let rawIndex = 0;
+  // Code point by code point, but indexed in UTF-16 units: that's what slice() and a
+  // RegExp match index use, and an emoji is two of them.
+  for (const char of raw) {
+    const out = normalize(char);
+    normalized += out;
+    for (let i = 0; i < out.length; i += 1) map.push(rawIndex);
+    rawIndex += char.length;
   }
   return { normalized, map };
 }
@@ -53,15 +67,19 @@ export class SearchIndex {
   private pageText = new Map<number, PageEntry>();
   private ready: Promise<void> | null = null;
 
-  constructor(
-    private doc: PdfDocument,
-    private pageCount: number,
-  ) {}
+  /** `loadPages` fetches the issue's extracted text (texto.json, written at publish time). */
+  constructor(private loadPages: () => Promise<PageText[]>) {}
 
   // Deferred until first use rather than started in the constructor: most visits to the
-  // reader never touch search, so extracting text from every page shouldn't be unconditional.
+  // reader never touch search, so its text shouldn't be downloaded unconditionally.
   whenReady(): Promise<void> {
-    if (!this.ready) this.ready = this.build();
+    if (!this.ready) {
+      // A failed download (say, offline) must not poison search for the rest of the visit.
+      this.ready = this.build().catch((err: unknown) => {
+        this.ready = null;
+        throw err;
+      });
+    }
     return this.ready;
   }
 
@@ -69,8 +87,9 @@ export class SearchIndex {
     const needle = normalize(query.trim());
     if (needle.length < MIN_QUERY_LENGTH) return [];
 
-    // Whole-word match: "azul" must not hit "azuleño".
-    const pattern = new RegExp(`\\b${escapeRegExp(needle)}\\b`);
+    // Whole-word match: "azul" must not hit "azuleño". Not \b, which only knows ASCII
+    // letters and needs one on each side, so "$4.000" or "1.ª" could never match.
+    const pattern = new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegExp(needle)}(?![\\p{L}\\p{N}])`, 'u');
 
     const results: SearchResult[] = [];
     for (const [page, entry] of this.pageText) {
@@ -96,15 +115,8 @@ export class SearchIndex {
   }
 
   private async build(): Promise<void> {
-    // One page's extraction failing (e.g. a malformed content stream) shouldn't disable
-    // search for the rest of the issue -- skip it and keep going.
-    for (let n = 1; n <= this.pageCount; n += 1) {
-      try {
-        const raw = await getPageText(this.doc, n);
-        this.pageText.set(n, { raw, ...normalizeWithMap(raw) });
-      } catch (err) {
-        console.error(`SearchIndex: failed to extract text from page ${n}`, err);
-      }
+    for (const { page, text } of await this.loadPages()) {
+      this.pageText.set(page, { raw: text, ...normalizeWithMap(text) });
     }
   }
 }

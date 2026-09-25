@@ -23,13 +23,15 @@ Asset generators, run by hand when a source changes — they overwrite files in 
 
 - `node scripts/prepare-logo.mjs` — logo, favicons, PWA icons
 - `node scripts/generate-og.mjs` — Open Graph card
-- `node scripts/prepare-magazine.mjs <pdf> <number>` — a magazine issue
+- `node scripts/prepare-magazine.mjs <pdf> <number>` — a magazine issue: download PDF,
+  cover, and (via `render-magazine-pages.mjs`) the reader's page images and text. The
+  `reduce-magazine` workflow runs it in CI for a release tagged `revista-<number>`
 
 ## Where things live
 
 - **Content is data.** `src/data/` holds `institutional` (subcommittees, foundation,
-  benefits), `advocacy` (public-record work), `magazine` (issues), `events` (dated
-  activities) and `programs` (initiatives, curriculum, prices). Edit there, not in markup —
+  benefits, membership, history), `advocacy` (public-record work), `magazine` (issues) and
+  `events` (dated activities). Edit there, not in markup —
   a teaser hardcoded in `index.astro` once kept advertising benefits that had been
   retracted from the data. Each module validates itself with **Zod** at build time, so a
   malformed entry fails the build instead of rendering wrong.
@@ -40,6 +42,11 @@ Asset generators, run by hand when a source changes — they overwrite files in 
   only place `rel="noopener noreferrer"` is written.
 - `/revista` grids the newest issue's year and folds earlier years into native `<details>`.
   No collapsible-section library — the CSP would block one anyway.
+- The reader (`/revista/<n>`) is a native scroll-snap strip of pre-rendered WebP pages
+  (`src/lib/reader/`): one page per view on phones, cover + two-page spreads on wide
+  screens, a CSS 3D page turn for mouse/keyboard turns only. No pdf.js and no page-flip
+  library at runtime — the old StPageFlip reader reordered DOM nodes mid-turn and jumped
+  the window on every page. Render pages from the **original** PDF, not the -web copy.
 - `src/pages/` — `index` · `nosotros` · `programas` · `beneficios` · `revista` ·
   `contacto` · `404`.
 - `public/` is passthrough and unfingerprinted; `dist/` is the build output wrangler
@@ -99,7 +106,8 @@ Colours are sampled from CEDA's own artwork — never approximate them.
 | `--color-sky`         | `#eff4fa` | Alternating sections                                   |
 
 Two signature devices, both from CEDA's print material: the **slash band** and the
-**marker circle**. Use them sparingly — overuse kills them. The slash band needs its white
+**marker circle** (static — the owner rejected the drawing animation). Use them sparingly —
+overuse kills them. The slash band needs its white
 base; over navy the navy stripes vanish and it reads as stray orange dashes.
 
 ## Traps

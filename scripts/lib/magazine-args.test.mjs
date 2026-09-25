@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_ASSET_BYTES, USAGE, checkAssetSize, parseArgs, psString } from './magazine-args.mjs';
+import {
+  MAX_ASSET_BYTES,
+  USAGE,
+  checkAssetSize,
+  issueFromTag,
+  parseArgs,
+  psString,
+} from './magazine-args.mjs';
 
 const exists = () => true;
 const missing = () => false;
@@ -51,5 +58,26 @@ describe('checkAssetSize', () => {
 describe('psString', () => {
   it('escapes characters that would end a PostScript string', () => {
     expect(psString('/a (1)\\b.pdf')).toBe('(/a \\(1\\)\\\\b.pdf)');
+  });
+});
+
+describe('issueFromTag', () => {
+  it('reads the number from a revista-N tag', () => {
+    expect(issueFromTag('revista-319')).toBe('319');
+    expect(issueFromTag(' revista-319\n')).toBe('319');
+  });
+
+  it('rejects anything else', () => {
+    for (const tag of [
+      '319',
+      'v319',
+      'revista-',
+      'revista-31a',
+      'Revista-319',
+      'revista-319-b',
+      'revista-0319',
+    ]) {
+      expect(issueFromTag(tag)).toBeNull();
+    }
   });
 });

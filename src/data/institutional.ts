@@ -105,7 +105,18 @@ export const foundationMembers = z
 
 /* Benefits as published in Revista Imagen CEDA N.º 316. Only list — the home page teaser
    derives from `featured` below; a hardcoded teaser once kept advertising retracted ones. */
-export const benefits = z.array(benefitSchema).parse([
+// The home page shows the featured ones in a grid of up to six.
+export const MAX_FEATURED_BENEFITS = 6;
+
+export const benefitsSchema = z.array(benefitSchema).refine(
+  (list) => {
+    const featured = list.filter((b) => b.featured).length;
+    return featured >= 1 && featured <= MAX_FEATURED_BENEFITS;
+  },
+  { message: `feature between 1 and ${MAX_FEATURED_BENEFITS} benefits for the home page` },
+);
+
+export const benefits = benefitsSchema.parse([
   {
     name: 'Salón para reuniones y eventos',
     body: `Espacio para reuniones, entrevistas y capacitaciones, y salón para charlas y eventos, en la sede de ${site.street}.`,
@@ -122,6 +133,7 @@ export const benefits = z.array(benefitSchema).parse([
     name: 'Extracciones en la sede',
     body: 'Extracciones en la sede: hasta $800.000 con Banco Provincia de Buenos Aires; otros bancos según su propio límite.',
     tag: 'Pagos',
+    featured: true,
   },
   {
     name: 'Banco Galicia',
@@ -139,6 +151,7 @@ export const benefits = z.array(benefitSchema).parse([
     name: 'Andreani',
     body: 'Envíos de bultos y correspondencia con 25% de descuento para socios.',
     tag: 'Logística',
+    featured: true,
   },
   {
     name: 'TALA RRHH',
@@ -212,6 +225,21 @@ export const historySources = z.array(z.object({ label: z.string().min(1), href:
     href: 'https://www.diarioeltiempo.com.ar/nota-paso-en-azul-un-24-de-mayo-205564',
   },
 ]);
+
+// From the founding date and the sources in historySources.
+export const historyMilestones = z
+  .array(z.object({ year: z.string().min(1), text: z.string().min(1) }))
+  .nonempty()
+  .parse([
+    { year: String(site.founded), text: `Se funda la ${site.foundingName}.` },
+    { year: '1930', text: 'La Liga funciona en Av. 25 de Mayo 733.' },
+    {
+      year: '1952',
+      text: 'Se la conoce como Centro de Comerciantes, Industriales y Propietarios de Azul.',
+    },
+    { year: '1980', text: `Ya lleva el nombre de ${site.name}.` },
+    { year: 'Hoy', text: `Su sede está en ${site.street}.` },
+  ]);
 
 // The institution's first board, 1917, under its founding name (site.foundingName).
 export const foundingBoardTitle = '1.ª Comisión Directiva (1917)';

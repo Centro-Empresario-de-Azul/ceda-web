@@ -1,0 +1,52 @@
+import type { APIRoute } from 'astro';
+
+// CEDA welcomes search engines and AI crawlers. Everything here is public institutional
+// information, and being quotable by assistants helps people find the cámara.
+// The explicit agents below are redundant with the wildcard — they are listed so the
+// intent is unambiguous, since several of these are opt-out tokens.
+// Generated so the Sitemap line follows `site` in astro.config.mjs when the domain moves.
+
+export const GET: APIRoute = ({ site }) =>
+  new Response(
+    `User-agent: *
+Allow: /
+
+# Search
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# AI assistants and their training/answering crawlers
+User-agent: Google-Extended
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+Sitemap: ${new URL('/sitemap-index.xml', site).href}
+`,
+    { headers: { 'Content-Type': 'text/plain; charset=utf-8' } },
+  );
