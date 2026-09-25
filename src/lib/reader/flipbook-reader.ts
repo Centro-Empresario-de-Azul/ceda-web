@@ -6,6 +6,16 @@ const NEIGHBOR_RADIUS = 1;
 // Canvases further than this from the current page are freed. Wider than NEIGHBOR_RADIUS
 // so ordinary back-and-forth flipping never re-renders a page it just left.
 const KEEP_RADIUS = 3;
+const FLIPPING_TIME_MS = 1000;
+// page-flip rejects flippingTime <= 0, so reduced motion gets the shortest valid duration.
+const REDUCED_MOTION_FLIPPING_TIME_MS = 1;
+
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+}
 
 export class FlipbookReader {
   private pageFlip: PageFlip;
@@ -33,6 +43,7 @@ export class FlipbookReader {
       // On. Off, StPageFlip preventDefaults touchstart and blocks vertical scroll on the book.
       mobileScrollSupport: true,
       swipeDistance: 30,
+      flippingTime: prefersReducedMotion() ? REDUCED_MOTION_FLIPPING_TIME_MS : FLIPPING_TIME_MS,
     });
   }
 
@@ -65,6 +76,8 @@ export class FlipbookReader {
         console.error('FlipbookReader: render around page', this.currentPage, 'failed', err),
       );
     });
+    // Rotating between one- and two-page layouts changes whether a next spread exists.
+    this.pageFlip.on('changeOrientation', () => this.notifyPageListeners());
 
     await this.renderAround(1);
   }
@@ -84,6 +97,27 @@ export class FlipbookReader {
     await this.renderAround(target);
     this.pageFlip.turnToPage(target - 1);
     this.setCurrentPage(target);
+  }
+
+  canGoPrev(): boolean {
+    return this.currentPage > 1;
+  }
+
+  // In landscape page-flip shows spreads and reports the left page; past the lone cover,
+  // the page to its right is visible too, so the book ends one page sooner.
+  canGoNext(): boolean {
+    const showsSpread =
+      String(this.pageFlip.getOrientation()) === 'landscape' && this.currentPage > 1;
+    const lastVisible = showsSpread ? this.currentPage + 1 : this.currentPage;
+    return lastVisible < this.pageCount;
+  }
+
+  prevPage(): void {
+    if (this.canGoPrev()) this.pageFlip.flipPrev();
+  }
+
+  nextPage(): void {
+    if (this.canGoNext()) this.pageFlip.flipNext();
   }
 
   setGesturesEnabled(enabled: boolean): void {
@@ -147,7 +181,11 @@ export class FlipbookReader {
   private setCurrentPage(pageNumber: number): void {
     if (pageNumber === this.currentPage) return;
     this.currentPage = pageNumber;
-    for (const listener of this.pageListeners) listener(pageNumber);
+    this.notifyPageListeners();
+  }
+
+  private notifyPageListeners(): void {
+    for (const listener of this.pageListeners) listener(this.currentPage);
   }
 
   private async renderAround(pageNumber: number): Promise<void> {

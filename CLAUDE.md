@@ -75,11 +75,13 @@ last minute; send those to WhatsApp rather than committing CEDA to a number.
 
 - CEDA is a _cámara empresarial_, never an _entidad gremial_ — its own Instagram bio says
   the latter and is wrong.
-- Contact is WhatsApp **2281 47-7297**. The landline 02281 42-4028 is retired.
+- CEDA has one phone line, WhatsApp **2281 58-3969**. 2281 47-7297 and the landline
+  02281 42-4028 are retired; `pre-push` fails on either.
 - Publish only what traces to CEDA material or a named source. Every `advocacy` entry
   carries its source link; anything unconfirmed carries a visible note.
-- CEDA does **not** sit on the Ente Mixto de Turismo (EMTUR). It articulates the private
-  side of the offer — do not word it as membership.
+- CEDA does **not** sit on the Ente Mixto de Turismo (EMTUR) — _Mixto_, even where a
+  magazine prints _Municipal_. It hosts meetings and articulates the private side of the
+  offer — do not word it as membership.
 - CEDA and **Fundación CEDA** are different entities with different leadership. Martín
   Picaroni presides CEDA; Ramiro Layús presides the Fundación and is CEDA's secretario.
   Attribute each activity to whichever one actually ran it.
@@ -118,9 +120,5 @@ Each of these has already cost a debugging cycle:
 
 ## Pending
 
-- Start date for the Herramientas Digitales programme.
 - Walk-in hours. Only phone attention (8–15 h) is published.
-- Second phone number. Issue 316 prints 2281 583969 for the office and, on another page,
-  the retired 2281 424028. The site publishes only WhatsApp 2281 47-7297, which the same
-  issue confirms as the socios channel — check with CEDA before adding either.
 - `/novedades`, once there is verified material to publish.

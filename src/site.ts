@@ -17,6 +17,11 @@ export const site = {
   /** The name CEDA was founded under. */
   foundingName: 'Liga Comercial e Industrial de Azul',
 
+  affiliations: [
+    { name: 'Confederación Argentina de la Mediana Empresa', acronym: 'CAME' },
+    { name: 'Federación Económica de la Provincia de Buenos Aires', acronym: 'FEBA' },
+  ],
+
   street: 'España 620',
   city: 'Azul',
   region: 'Buenos Aires',
@@ -28,12 +33,12 @@ export const site = {
   latitude: -36.782205,
   longitude: -59.857174,
 
-  /* Phone attention hours, printed in Revista Imagen CEDA N.º 316 (julio 2026). This is
-     when the office answers the phone; walk-in hours are not published. */
+  /* CEDA's only phone line, WhatsApp included. Attention hours as printed in Revista Imagen
+     CEDA N.º 316 (julio 2026); walk-in hours are not published. */
   officeHours: 'de 8 a 15 h',
-  whatsappDisplay: '2281 47-7297',
-  whatsappUrl: 'https://wa.me/5492281477297',
-  whatsappE164: '+5492281477297',
+  whatsappDisplay: '2281 58-3969',
+  whatsappUrl: 'https://wa.me/5492281583969',
+  whatsappE164: '+5492281583969',
   email: 'comunicacionceda@gmail.com',
   instagram: 'https://www.instagram.com/cedaazul/',
   facebook: 'https://www.facebook.com/Centroempresariodeazul/',
@@ -42,7 +47,9 @@ export const site = {
   registryForm:
     'https://docs.google.com/forms/d/e/1FAIpQLSeYq-jbdI4PbgsA10942-rma6IayJVcBI1T-cho1z5eXNZKyw/viewform',
 
-  origin: 'https://www.ceda.org.ar',
+  // Stand-in domain while an ARCA/NIC.AR administrative issue blocks registering
+  // ceda.org.ar. Switch back once that's resolved (see wrangler.jsonc's commented route).
+  origin: 'https://www.centroempresariodeazul.org.ar',
 
   /* Google Search Console verification token. Prefer the DNS TXT method once ceda.org.ar
      is delegated — it verifies the whole domain and needs no markup. This meta-tag
@@ -54,6 +61,16 @@ export const site = {
 export const address = `${site.street}, ${site.city}, ${site.region}`;
 
 /** Page <title>, suffixed with the acronym. Home passes its own. */
+/** WhatsApp chat opened with a joining message already typed. */
+export const whatsappJoinUrl = `${site.whatsappUrl}?text=${encodeURIComponent(
+  `Hola, quiero asociarme al ${site.acronym}.`,
+)}`;
+
+/** "la Confederación … (CAME) y la Federación … (FEBA)" */
+export const affiliationsProse = site.affiliations
+  .map((a) => `la ${a.name} (${a.acronym})`)
+  .join(' y ');
+
 export const pageTitle = (section: string) => `${section} — ${site.acronym}`;
 
 export const nav = [

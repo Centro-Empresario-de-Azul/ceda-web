@@ -20,9 +20,9 @@ const { class: className = '' } = Astro.props;
     <path
       d="M46 78C40 40 128 18 214 16c92-2 168 18 164 58-4 38-92 58-182 59C110 134 44 116 42 76c-1-26 30-44 74-53"
       stroke="var(--color-orange)"
-      stroke-width="7"
       stroke-linecap="round"
       vector-effect="non-scaling-stroke"
+      pathLength="1"
       class="marker-stroke"></path>
   </svg>
 </span>
@@ -32,10 +32,12 @@ const { class: className = '' } = Astro.props;
     stroke-width: 5;
   }
 
+  /* Dash values are in pathLength units, so the stroke finishes drawing however far the
+     non-scaling stroke stretches at wide viewports. */
   @media (prefers-reduced-motion: no-preference) {
     .marker-stroke {
-      stroke-dasharray: 1000;
-      stroke-dashoffset: 1000;
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
       animation: draw-marker 1.1s 0.35s cubic-bezier(0.65, 0, 0.35, 1) forwards;
     }
   }

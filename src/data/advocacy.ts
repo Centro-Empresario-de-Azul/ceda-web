@@ -16,12 +16,31 @@ const entrySchema = z.object({
 
 const entries = z.array(entrySchema).parse([
   {
-    title: 'Constitución del Ente Municipal de Turismo (EMTUR)',
+    title: 'Sesión especial por la autovía de la Ruta 3',
+    date: '2026-09-06',
+    body: 'La Fundación CEDA participó de la sesión especial que el Concejo Deliberante realizó sobre la Ruta Nacional 3, a quince años del reclamo por la autovía. Junto a Vecinos Autoconvocados y Estrellas Amarillas, la Fundación levantó el monolito del espacio memorial en ese tramo de la ruta.',
+    source: {
+      label: 'Séptima Sección, 07/09/2026',
+      href: 'https://septimaseccion.com.ar/el-concejo-de-azul-realizo-una-sesion-especial-en-la-ruta-n-3-y-renovo-un-reclamo-historico/',
+    },
+  },
+  {
+    title: 'Reunión con el Concejo Deliberante',
+    date: '2026-08-31',
+    body: 'Referentes de CEDA se reunieron con el Concejo Deliberante para plantear que lo recaudado por la Tasa de Seguridad e Higiene se aplique en forma gradual a mejoras de infraestructura, y para avanzar con la ordenanza de revalorización del entorno urbano del centro comercial, en estudio en comisiones.',
+    source: {
+      label: 'Concejo Deliberante de Azul, 31/08/2026',
+      href: 'https://concejodeliberantedeazul.gob.ar/index.php/2026/08/31/reunion-con-referentes-del-centro-empresario/',
+    },
+  },
+  {
+    // CEDA hosts the EMTUR's meetings but does not sit on it — word it as hosting.
+    title: 'Reunión constitutiva del EMTUR en la sede del CEDA',
     date: '2026-08-12',
-    body: 'En la sede del CEDA se realizó la primera reunión constitutiva del Ente de Turismo local, con la participación de representantes públicos y privados del sector: el Municipio, el Concejo Deliberante, el Colegio de Profesionales en Turismo y referentes de alojamiento y de actividades turísticas complementarias.',
+    body: 'En la sede del CEDA se realizó la primera reunión constitutiva del Ente Mixto de Turismo (EMTUR), con representantes públicos y privados del sector: el Municipio, el Concejo Deliberante, el Colegio de Profesionales en Turismo y referentes de alojamiento y de actividades turísticas complementarias.',
     source: {
       label: 'Revista Imagen CEDA N.º 318, septiembre 2026',
-      href: '/revista',
+      href: '/revista/318',
     },
   },
   {
@@ -30,7 +49,7 @@ const entries = z.array(entrySchema).parse([
     body: 'Vecinos autoconvocados se manifestaron en el acceso a Azul, sobre la Ruta Nacional N.º 3 y Av. Piazza, para reclamar el avance de la obra de la autovía. El CEDA continúa acompañando el reclamo.',
     source: {
       label: 'Revista Imagen CEDA N.º 317, agosto 2026',
-      href: '/revista',
+      href: '/revista/317',
     },
   },
   {
@@ -39,7 +58,7 @@ const entries = z.array(entrySchema).parse([
     body: 'La Fundación CEDA formalizó la Mesa de Seguimiento del Proyecto Ciudad Parque, un espacio de trabajo permanente que se reunirá mensualmente para avanzar en la planificación, el análisis y el seguimiento de las distintas etapas de la iniciativa.',
     source: {
       label: 'Revista Imagen CEDA N.º 317, agosto 2026',
-      href: '/revista',
+      href: '/revista/317',
     },
   },
   {
@@ -60,10 +79,10 @@ const entries = z.array(entrySchema).parse([
   {
     title: '1.ª Ronda de Negocios',
     date: '2025-05-30',
-    body: 'La primera Ronda de Negocios de Azul, impulsada desde la Fundación CEDA para fortalecer el entramado económico local.',
+    body: 'La primera Ronda de Negocios multisectorial de Azul, organizada por CAME junto a CEDA con el auspicio de FEBA, y presentada por la Fundación CEDA en su agenda de trabajo.',
     source: {
-      label: 'Municipio de Azul',
-      href: 'https://azuldigital.gob.ar/se-desarrolla-la-primera-ronda-de-negocios-en-azul/',
+      label: 'CAME',
+      href: 'https://www.redcame.org.ar/novedades/14211/convocatoria-abierta-a-la-ronda-de-negocios-multisectorial-comercial-industrial-y-de-servicios-azul-2025',
     },
   },
   {
@@ -72,7 +91,7 @@ const entries = z.array(entrySchema).parse([
     body: 'La Fundación CEDA participó de una nueva reunión con la Municipalidad de Azul para avanzar en proyectos de planificación urbana y desarrollo de la ciudad.',
     source: {
       label: 'Revista Imagen CEDA N.º 316, julio 2026',
-      href: '/revista',
+      href: '/revista/316',
     },
   },
   {
@@ -95,11 +114,20 @@ const entries = z.array(entrySchema).parse([
   },
   {
     title: 'Convenio del Centro Comercial a Cielo Abierto',
-    date: '2024-10-01',
-    body: 'Se firmó el convenio que da inicio al desarrollo del primer centro comercial a cielo abierto de la ciudad, entre la Municipalidad de Azul, CEDA, CAME y FEBA.',
+    date: '2024-10-25',
+    body: 'En la sede de CEDA se firmó el convenio que da inicio al desarrollo del primer centro comercial a cielo abierto de la ciudad, entre la Municipalidad de Azul, CEDA, CAME y FEBA.',
     source: {
-      label: 'Municipio de Azul',
-      href: 'https://azuldigital.gob.ar/se-firmo-un-convenio-para-la-creacion-del-centro-comercial-abierto-en-azul/',
+      label: 'Noticias de Azul, 25/10/2024',
+      href: 'https://noticiasdeazul.com/contenido/11062/convenio-para-la-creacion-del-centro-comercial-abierto-en-azul',
+    },
+  },
+  {
+    title: 'Iluminación del centro comercial',
+    date: '2025-08-28',
+    body: 'En el marco del proyecto de Centro Comercial a Cielo Abierto que CEDA impulsa junto al Municipio, la Cooperativa Eléctrica comenzó a reemplazar la iluminación colgante del centro por cuarenta columnas con luminarias modernas.',
+    source: {
+      label: 'El Tiempo, 28/08/2025',
+      href: 'https://www.diarioeltiempo.com.ar/2025/08/28/se-trabaja-en-la-obra-de-iluminacion-del-centro-comercial-de-azul',
     },
   },
   {
@@ -113,7 +141,11 @@ const entries = z.array(entrySchema).parse([
   },
 ]);
 
-/** Newest first; `year` is derived rather than stored so it can't disagree with `date`. */
-export const advocacy = [...entries]
-  .sort((a, b) => b.date.localeCompare(a.date))
-  .map((entry) => ({ ...entry, year: entry.date.slice(0, 4) }));
+/** Newest first. */
+export const advocacy = [...entries].sort((a, b) => b.date.localeCompare(a.date));
+
+/** Newest year first; the year is derived from `date` so the two can't disagree. */
+export const advocacyByYear = [...new Set(advocacy.map((e) => e.date.slice(0, 4)))].map((year) => ({
+  year,
+  entries: advocacy.filter((e) => e.date.startsWith(year)),
+}));

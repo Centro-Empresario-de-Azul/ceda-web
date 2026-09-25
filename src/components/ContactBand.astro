@@ -9,8 +9,10 @@ interface Props {
   title: string;
   /** Small print under the button — typically the number, optionally the address. */
   note?: string;
+  /** Chat link — pass site.whatsappJoinUrl where the band invites people to join. */
+  href?: string;
 }
-const { title, note } = Astro.props;
+const { title, note, href = site.whatsappUrl } = Astro.props;
 ---
 
 <section class="bg-navy text-white">
@@ -20,9 +22,7 @@ const { title, note } = Astro.props;
     <p class="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-sky-2">
       <slot />
     </p>
-    <ExternalLink href={site.whatsappUrl} class="btn-primary mt-9">
-      Escribinos por WhatsApp
-    </ExternalLink>
+    <ExternalLink href={href} class="btn-primary mt-9"> Escribinos por WhatsApp </ExternalLink>
     {note && <p class="mt-5 text-sm text-sky-2">{note}</p>}
   </div>
 </section>

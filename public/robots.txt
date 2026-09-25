@@ -41,4 +41,4 @@ Allow: /
 User-agent: CCBot
 Allow: /
 
-Sitemap: https://www.ceda.org.ar/sitemap-index.xml
+Sitemap: https://www.centroempresariodeazul.org.ar/sitemap-index.xml

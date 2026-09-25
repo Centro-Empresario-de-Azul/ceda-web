@@ -4,7 +4,18 @@
 set -e
 
 echo "→ build"
-npm run build >/dev/null || { echo "✗ Build failed."; exit 1; }
+# Quiet on success, but a failed build prints its log — astro check's diagnostics live there.
+log=$(mktemp)
+npm run build >"$log" 2>&1 || { cat "$log"; rm -f "$log"; echo "✗ Build failed."; exit 1; }
+rm -f "$log"
+
+echo "→ source checks"
+# ExternalLink is the one place rel="noopener noreferrer" is written; a hand-rolled
+# target=_blank elsewhere is how one eventually ships without it.
+if grep -rln 'rel="noopener' src --include='*.astro' | grep -v 'src/components/ExternalLink.astro'; then
+  echo "✗ Use <ExternalLink> instead of a hand-written target=_blank link (files above)."
+  exit 1
+fi
 
 echo "→ content checks"
 node --input-type=module -e '
@@ -29,8 +40,14 @@ for (const page of pages) {
     if (fused) fail(page + ": fused words — " + fused[0] + "  (add {\" \"} between the text and the tag)");
   }
 
-  // Retired contact details and the shortener must never reappear.
-  if (html.includes("42-4028")) fail(page + ": retired landline 02281 42-4028");
+  // Retired contact details and the shortener must never reappear. CEDA has one line,
+  // WhatsApp 2281 58-3969 (src/site.ts).
+  for (const [re, label] of [
+    [/42-?4028/, "retired landline 02281 42-4028"],
+    [/47-?7297/, "retired number 2281 47-7297"],
+  ]) {
+    if (re.test(html)) fail(page + ": " + label);
+  }
   if (html.includes("bit.ly")) fail(page + ": bit.ly shortener — link the destination directly");
   if (/entidad gremial/i.test(html)) fail(page + ": CEDA is a cámara empresarial, not an entidad gremial");
 }

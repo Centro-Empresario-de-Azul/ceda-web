@@ -4,7 +4,8 @@ Sitio institucional del **Centro Empresario de Azul (CEDA)**, la cámara empresa
 representa al comercio, la industria y los servicios de Azul, Buenos Aires. Fundado en
 1917, integra CAME y FEBA.
 
-**Sitio:** [www.ceda.org.ar](https://www.ceda.org.ar) — _pendiente de delegación DNS_
+**Sitio:** [www.centroempresariodeazul.org.ar](https://www.centroempresariodeazul.org.ar) —
+dominio provisorio hasta que se pueda registrar `ceda.org.ar` (ver [Dominio](#dominio)).
 
 Astro 7 (salida estática) · Tailwind CSS v4 · Cloudflare Workers Static Assets.
 Las convenciones del proyecto están en [`CLAUDE.md`](./CLAUDE.md).
@@ -40,8 +41,9 @@ Los hooks de Git se instalan solos con `npm install` (`core.hooksPath` → `.git
 | `pre-push`   | build + chequeos sobre el HTML generado |
 
 El `pre-push` busca errores que el linter no puede ver porque producen código válido:
-palabras pegadas por el colapso de espacios de Astro (`solo.Desde`), el teléfono fijo
-viejo, links `bit.ly` y la frase "entidad gremial".
+palabras pegadas por el colapso de espacios de Astro (`solo.Desde`), los teléfonos
+viejos, links `bit.ly` y la frase "entidad gremial". También rechaza links externos
+escritos a mano en lugar de `<ExternalLink>`.
 
 > `public/js/` se sirve **sin compilar**, así que ahí el linter limita la sintaxis a
 > ES2019. En `src/` no hace falta: lo compila Astro.
@@ -57,7 +59,7 @@ Casi todo el texto vive en módulos, no en el markup.
 | Gestiones ante el municipio          | `src/data/advocacy.ts`      |
 | Ediciones de la revista              | `src/data/magazine.ts`      |
 | Charlas y jornadas                   | `src/data/events.ts`        |
-| Programas, temario y precios         | `src/data/programs.ts`      |
+| Proyectos destacados en el inicio    | `src/data/programs.ts`      |
 | Textos de una página puntual         | `src/pages/<página>.astro`  |
 | Fotos                                | `src/assets/img/`           |
 
@@ -112,9 +114,49 @@ No requiere tocar la CSP. Lo más simple, una vez delegado el dominio, es verifi
 registro TXT en el DNS. Si hiciera falta el método de etiqueta, completá
 `googleSiteVerification` en `src/site.ts` y se agrega sola al `<head>`.
 
-Cuando `ceda.org.ar` esté delegado a Cloudflare, descomentá el bloque `routes` de
-`wrangler.jsonc` y publicá: Cloudflare crea el registro DNS y el certificado. El apex
-redirige a `www` con una Redirect Rule, que corre antes que el Worker.
+### Dominio
+
+Un problema administrativo entre ARCA y NIC Argentina impide por ahora registrar
+`ceda.org.ar`. Mientras tanto el sitio se publica en un dominio provisorio:
+
+| Dirección                                   | Qué hace                                  |
+| ------------------------------------------- | ----------------------------------------- |
+| `https://www.centroempresariodeazul.org.ar` | Sirve el sitio (Custom Domain del Worker) |
+| `https://centroempresariodeazul.org.ar`     | 301 a `www`, conservando ruta y query     |
+
+- `wrangler deploy` crea solo el registro DNS de `www`. El apex necesita un registro
+  propio **proxied** (A `192.0.2.1`, una IP de documentación que nunca recibe tráfico)
+  para que la Redirect Rule tenga dónde correr.
+- La Redirect Rule vive en la zona de Cloudflare (_Rules → Redirect Rules_) y corre
+  antes que el Worker: `http.host eq "centroempresariodeazul.org.ar"` →
+  `concat("https://www.centroempresariodeazul.org.ar", http.request.uri.path)`, 301.
+- El dominio figura en `wrangler.jsonc` (`routes`), `src/site.ts` (`origin`),
+  `astro.config.mjs` (`site`) y `public/robots.txt` (`Sitemap`).
+
+#### Pasar a `www.ceda.org.ar`
+
+Cuando `ceda.org.ar` esté registrado, el dominio provisorio **no se da de baja**: pasa a
+redirigir con 301 al definitivo, así no se pierden los links compartidos ni lo indexado.
+
+1. Agregar la zona `ceda.org.ar` en Cloudflare y delegar sus nameservers en NIC.ar.
+2. Reemplazar el dominio en los cuatro archivos de arriba: en `wrangler.jsonc` activar el
+   bloque `routes` comentado (`www.ceda.org.ar`) en lugar del actual.
+3. `npm run deploy`. Cloudflare crea el DNS y el certificado de `www.ceda.org.ar`.
+4. En la zona `ceda.org.ar`: registro A `192.0.2.1` proxied para el apex y la misma
+   Redirect Rule de apex → `www` que usa hoy el dominio provisorio.
+5. En la zona `centroempresariodeazul.org.ar`:
+   - Quitar el Custom Domain `www` del Worker si sigue asociado (_Workers → ceda-web →
+     Settings → Domains & Routes_) y crear un registro A `192.0.2.1` proxied para `www`.
+   - Cambiar la Redirect Rule para que tome los dos hosts y apunte al dominio nuevo:
+     `http.host in {"centroempresariodeazul.org.ar" "www.centroempresariodeazul.org.ar"}`
+     → `concat("https://www.ceda.org.ar", http.request.uri.path)`, 301, conservando la
+     query.
+6. Verificar: `curl -I https://www.centroempresariodeazul.org.ar/nosotros` debe devolver
+   `301` con `location: https://www.ceda.org.ar/nosotros`.
+7. En Google Search Console, verificar `ceda.org.ar` y usar **Cambio de dirección** desde
+   la propiedad del dominio provisorio.
+8. Mantener `centroempresariodeazul.org.ar` renovado al menos un año más, mientras los
+   buscadores y los links impresos (revista, afiches) terminan de migrar.
 
 ## Estructura
 
@@ -137,14 +179,12 @@ dist/            Salida del build — lo que publica wrangler (gitignored)
 
 ## Pendiente
 
-- Fecha de inicio del programa Herramientas Digitales
 - Horarios de atención al público presencial (solo está publicada la atención telefónica)
-- Confirmar el teléfono de oficina 2281 583969 y la grafía de dos nombres de la comisión
 - `/novedades`, cuando haya material verificado
-- Delegación DNS de `ceda.org.ar`
+- Registro de `ceda.org.ar` y migración desde el dominio provisorio (ver [Dominio](#dominio))
 
 ## Contacto
 
 España 620, Azul, Buenos Aires ·
-WhatsApp [2281 47-7297](https://wa.me/5492281477297) ·
+WhatsApp [2281 58-3969](https://wa.me/5492281583969) ·
 [comunicacionceda@gmail.com](mailto:comunicacionceda@gmail.com)

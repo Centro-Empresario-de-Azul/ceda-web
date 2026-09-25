@@ -1,9 +1,11 @@
 ---
+import { getImage } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
 import PageHero from '../../components/PageHero.astro';
 import { Icon } from 'astro-icon/components';
 import { site, pageTitle } from '../../site';
 import { issues } from '../../data/magazine';
+import { coverFor } from '../../lib/magazine-covers';
 
 export function getStaticPaths() {
   return issues.map((issue) => ({
@@ -13,21 +15,31 @@ export function getStaticPaths() {
 }
 
 const { issue } = Astro.props;
+// The cover makes a far better link preview for an issue than the generic site card.
+const coverSource = coverFor(issue.cover);
+const cover = await getImage({ src: coverSource, width: 600, format: 'jpeg' });
+const coverHeight = Math.round((600 * coverSource.height) / coverSource.width);
 ---
 
 <Base
   title={pageTitle(`Imagen ${site.acronym} N.º ${issue.number}`)}
   description={`Leé online la edición N.º ${issue.number} de Imagen ${site.acronym}: ${issue.headline}`}
+  ogImage={{
+    src: cover.src,
+    width: 600,
+    height: coverHeight,
+    alt: `Tapa de Imagen ${site.acronym} número ${issue.number}, ${issue.date}`,
+  }}
 >
   <PageHero eyebrow="Revista" title={`Número ${issue.number}`} lead={issue.headline} />
 
-  <section class="mx-auto max-w-4xl px-5 py-12 md:py-16">
+  <section id="reader" class="mx-auto max-w-4xl px-5 py-12 md:py-16">
     <div id="reader-controls" class="mb-6 flex flex-wrap items-center gap-4">
       <input
         type="search"
         id="reader-search"
         placeholder="Buscar en esta edición…"
-        class="w-full rounded-full border border-sky-2 px-4 py-2 text-sm sm:w-72"
+        class="w-full rounded-full border border-muted/80 px-4 py-2 text-sm sm:w-72"
         aria-label="Buscar en esta edición"
       />
 
@@ -38,12 +50,12 @@ const { issue } = Astro.props;
           id="reader-page-input"
           min="1"
           max={issue.pages}
-          class="w-20 rounded border border-sky-2 px-2 py-1 text-sm"
+          class="w-20 rounded border border-muted/80 px-2 py-1 text-sm"
         />
         <button
           type="button"
           id="reader-zoom-button"
-          class="rounded border border-sky-2 px-3 py-1.5 text-navy transition-colors hover:bg-sky"
+          class="rounded border border-muted/80 px-3 py-1.5 text-navy transition-colors hover:bg-sky"
           aria-label="Ampliar página"
         >
           <Icon name="lucide:zoom-in" class="size-4" aria-hidden="true" />
@@ -57,19 +69,42 @@ const { issue } = Astro.props;
 
     <div
       id="reader-container"
-      class="relative mx-auto"
+      class="relative mx-auto h-[70vh] min-h-[420px]"
+      role="region"
+      aria-label={`Revista Imagen ${site.acronym} N.º ${issue.number}`}
       data-pdf-url={issue.pdf}
-      style="height: 70vh; min-height: 420px;"
     >
+    </div>
+
+    <div id="reader-nav" class="mt-4 flex items-center justify-center gap-3">
+      <button
+        type="button"
+        id="reader-prev"
+        class="inline-flex items-center gap-1.5 rounded border border-muted/80 px-3 py-1.5 text-sm text-navy transition-colors hover:bg-sky aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:bg-transparent"
+        aria-disabled="true"
+      >
+        <Icon name="lucide:chevron-left" class="size-4" aria-hidden="true" />
+        Anterior
+      </button>
+      <button
+        type="button"
+        id="reader-next"
+        class="inline-flex items-center gap-1.5 rounded border border-muted/80 px-3 py-1.5 text-sm text-navy transition-colors hover:bg-sky aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:bg-transparent"
+        aria-disabled="true"
+      >
+        Siguiente
+        <Icon name="lucide:chevron-right" class="size-4" aria-hidden="true" />
+      </button>
     </div>
 
     <p id="reader-error" class="mt-4 hidden text-center text-muted">
       No pudimos cargar la vista previa online. Podés descargar el PDF más abajo.
     </p>
 
-    <div
+    <dialog
       id="reader-zoom-lightbox"
-      class="fixed inset-0 z-50 flex hidden items-center justify-center bg-black/90 p-6"
+      class="m-0 h-dvh max-h-none w-dvw max-w-none items-center justify-center border-0 bg-black/90 p-6 open:flex"
+      aria-label="Página ampliada"
     >
       <button
         type="button"
@@ -79,7 +114,7 @@ const { issue } = Astro.props;
       >
         <Icon name="lucide:x" class="size-6" aria-hidden="true" />
       </button>
-    </div>
+    </dialog>
 
     <div class="mt-8 text-center">
       <a
@@ -98,6 +133,7 @@ const { issue } = Astro.props;
     import { FlipbookReader } from '../../lib/reader/flipbook-reader';
     import { SearchIndex, MIN_QUERY_LENGTH } from '../../lib/reader/search-index';
     import { ZoomLightbox } from '../../lib/reader/zoom-lightbox';
+    import { bindReaderNavigation } from '../../lib/reader/reader-navigation';
 
     // Reader interactions fire promises without awaiting them (the click/input handler
     // can't be async-blocking), so failures need an explicit sink instead of going unhandled.
@@ -107,6 +143,7 @@ const { issue } = Astro.props;
       const container = document.getElementById('reader-container');
       const errorEl = document.getElementById('reader-error');
       const controls = document.getElementById('reader-controls');
+      const nav = document.getElementById('reader-nav');
       const pageInput = document.getElementById('reader-page-input') as HTMLInputElement | null;
       if (!container || !pageInput) return;
 
@@ -131,11 +168,20 @@ const { issue } = Astro.props;
           if (Number.isInteger(page)) reader.goToPage(page).catch(reportError('goToPage failed'));
         });
 
+        const readerRoot = document.getElementById('reader');
+        const prevButton = document.getElementById('reader-prev');
+        const nextButton = document.getElementById('reader-next');
+        if (readerRoot && prevButton && nextButton) {
+          bindReaderNavigation(readerRoot, prevButton, nextButton, reader);
+        }
+
         const lightboxRoot = document.getElementById('reader-zoom-lightbox');
         const zoomButton = document.getElementById('reader-zoom-button');
-        if (lightboxRoot && zoomButton) {
-          const lightbox = new ZoomLightbox(lightboxRoot, (open) =>
-            reader.setGesturesEnabled(!open),
+        if (lightboxRoot instanceof HTMLDialogElement && zoomButton) {
+          const lightbox = new ZoomLightbox(
+            lightboxRoot,
+            (open) => reader.setGesturesEnabled(!open),
+            zoomButton,
           );
           zoomButton.addEventListener('click', () => {
             lightbox.open(doc, reader.getCurrentPage()).catch(reportError('Zoom open failed'));
@@ -181,6 +227,7 @@ const { issue } = Astro.props;
         errorEl?.classList.remove('hidden');
         container.classList.add('hidden');
         controls?.classList.add('hidden');
+        nav?.classList.add('hidden');
         document.getElementById('reader-search-results-wrap')?.classList.remove('is-open');
       }
     }
