@@ -2,7 +2,6 @@
 import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import PageHero from '../components/PageHero.astro';
-import SlashBand from '../components/SlashBand.astro';
 import SectionHeader from '../components/SectionHeader.astro';
 import ExternalLink from '../components/ExternalLink.astro';
 import BusinessDirectory from '../components/BusinessDirectory.astro';
@@ -30,14 +29,13 @@ import { upcoming } from '../data/events';
     )
   }
 
-  <section class="bg-navy text-white">
-    <SlashBand height="h-3" />
+  <section>
     <div
       class="mx-auto grid max-w-6xl items-center gap-12 px-5 py-20 md:grid-cols-2 md:gap-16 md:py-28"
     >
       <div>
-        <SectionHeader eyebrow="Ciudad" title="Centro Comercial a Cielo Abierto" tone="navy" />
-        <div class="mt-6 space-y-5 text-lg leading-relaxed text-sky-2">
+        <SectionHeader eyebrow="Ciudad" title="Centro Comercial a Cielo Abierto" />
+        <div class="mt-6 space-y-5 text-lg leading-relaxed text-muted">
           <p>
             El centro de Azul fue siempre el corazón comercial, social y cultural de la ciudad. Las
             crisis económicas y el cambio en los hábitos de consumo le fueron quitando movimiento.
