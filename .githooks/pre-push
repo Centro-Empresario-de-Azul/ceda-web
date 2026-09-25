@@ -19,7 +19,7 @@ fi
 
 echo "→ content checks"
 node --input-type=module -e '
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 
 // Recursive: /revista/<number> pages live in a subdirectory, and a top-level-only scan
 // silently skipped every one of them.
@@ -40,7 +40,8 @@ for (const page of pages) {
   for (const m of body.matchAll(/<(p|li|dd|dt|h[1-4]|a)\b[^>]*>(.*?)<\/\1>/gs)) {
     if (/<(p|div|section|ul|ol)\b/.test(m[2])) continue;
     const text = m[2].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
-    const fused = text.match(/[a-záéíóúñ]\.[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}/);
+    // Also two expressions joined without a space: "2281 58-3969de 8 a 15 h".
+    const fused = text.match(/\p{Ll}\.\p{Lu}\p{Ll}{2,}|\d{4}\p{Ll}{2,}/u);
     if (fused) fail(page + ": fused words — " + fused[0] + "  (add {\" \"} between the text and the tag)");
   }
 
@@ -68,6 +69,19 @@ for (const page of pages) {
   }
   if (doc.includes("bit.ly")) fail(page + ": bit.ly shortener — link the destination directly");
   if (/entidad gremial/i.test(doc)) fail(page + ": CEDA is a cámara empresarial, not an entidad gremial");
+
+  // Every internal link and asset must exist in the build: a PDF or page image that was
+  // never generated still produces valid HTML that 404s.
+  const refs = [...doc.matchAll(/\b(?:href|src)="(\/[^"]*)"/g)].map((m) => m[1]);
+  for (const m of doc.matchAll(/\bsrcset="([^"]*)"/g)) {
+    refs.push(...m[1].split(",").map((c) => c.trim().split(/\s+/)[0]));
+  }
+  for (const ref of new Set(refs)) {
+    if (!ref.startsWith("/") || ref.startsWith("//")) continue;
+    const path = decodeURIComponent(ref.split(/[?#]/)[0]).replace(/\/$/, "");
+    const found = [path, path + ".html", path + "/index.html"].some((p) => existsSync("dist" + p));
+    if (!found) fail(page + ": broken internal link " + ref);
+  }
 }
 
 // public/ is copied verbatim, so anything that lands in it ships — including junk the

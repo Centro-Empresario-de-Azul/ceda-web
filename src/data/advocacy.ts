@@ -1,10 +1,13 @@
 // Institutional advocacy. Every entry traces to a named public source — keep it that way.
 import { z } from 'zod';
+import { issues } from './magazine';
 
-const entrySchema = z.object({
+export const entrySchema = z.object({
   /** ISO date. Orders the list, and the displayed year is derived from it. */
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'expected YYYY-MM-DD'),
+  date: z.iso.date(),
   title: z.string().min(1),
+  /** Who ran it. Fundación CEDA is a separate entity with its own leadership. */
+  by: z.enum(['CEDA', 'Fundación CEDA']).default('CEDA'),
   body: z.string().min(1),
   // A claim without a source is the one thing that must never ship here. Most are
   // external; the magazine is cited as an internal path.
@@ -14,10 +17,26 @@ const entrySchema = z.object({
   }),
 });
 
-const entries = z.array(entrySchema).parse([
+const issuePaths = new Set(issues.map((issue) => `/revista/${issue.number}`));
+
+export const entriesSchema = z.array(entrySchema).superRefine((list, ctx) => {
+  list.forEach((entry, i) => {
+    const href = entry.source.href;
+    if (href.startsWith('/') && !issuePaths.has(href)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: `source ${href} is not a published issue`,
+        path: [i, 'source', 'href'],
+      });
+    }
+  });
+});
+
+const entries = entriesSchema.parse([
   {
     title: 'Sesión especial por la autovía de la Ruta 3',
     date: '2026-09-06',
+    by: 'Fundación CEDA',
     body: 'La Fundación CEDA participó de la sesión especial que el Concejo Deliberante realizó sobre la Ruta Nacional 3, a quince años del reclamo por la autovía. Junto a Vecinos Autoconvocados y Estrellas Amarillas, la Fundación levantó el monolito del espacio memorial en ese tramo de la ruta.',
     source: {
       label: 'Séptima Sección, 07/09/2026',
@@ -55,6 +74,7 @@ const entries = z.array(entrySchema).parse([
   {
     title: 'Mesa de Seguimiento del Proyecto Ciudad Parque',
     date: '2026-07-07',
+    by: 'Fundación CEDA',
     body: 'La Fundación CEDA formalizó la Mesa de Seguimiento del Proyecto Ciudad Parque, un espacio de trabajo permanente que se reunirá mensualmente para avanzar en la planificación, el análisis y el seguimiento de las distintas etapas de la iniciativa.',
     source: {
       label: 'Revista Imagen CEDA N.º 317, agosto 2026',
@@ -88,6 +108,7 @@ const entries = z.array(entrySchema).parse([
   {
     title: 'Planificación urbana',
     date: '2026-06-05',
+    by: 'Fundación CEDA',
     body: 'La Fundación CEDA participó de una nueva reunión con la Municipalidad de Azul para avanzar en proyectos de planificación urbana y desarrollo de la ciudad.',
     source: {
       label: 'Revista Imagen CEDA N.º 316, julio 2026',

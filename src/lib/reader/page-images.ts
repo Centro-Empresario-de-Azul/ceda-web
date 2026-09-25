@@ -24,7 +24,11 @@ export function pageSetFor(issue: number): PageSet {
       `No page images for issue ${issue}. Run: node scripts/render-magazine-pages.mjs <original.pdf> ${issue}`,
     );
   }
-  return metaSchema.parse(entry.default);
+  const set = metaSchema.parse(entry.default);
+  if (set.issue !== issue) {
+    throw new Error(`magazine-pages/${issue}.json describes issue ${set.issue}`);
+  }
+  return set;
 }
 
 export function pageSrcset(set: PageSet, page: number): string {
@@ -37,6 +41,13 @@ const texts = import.meta.glob<{ default: { page: number; text: string }[] }>(
   { eager: true },
 );
 
+/** Throws when the text is missing: the reader's search would 404 on it. */
 export function pageTextsFor(issue: number): { page: number; text: string }[] {
-  return texts[`../../../public/revista/paginas/${issue}/texto.json`]?.default ?? [];
+  const entry = texts[`../../../public/revista/paginas/${issue}/texto.json`];
+  if (!entry) {
+    throw new Error(
+      `No page text for issue ${issue}. Run: node scripts/render-magazine-pages.mjs <original.pdf> ${issue}`,
+    );
+  }
+  return entry.default;
 }

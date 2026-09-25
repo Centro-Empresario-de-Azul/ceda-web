@@ -16,12 +16,12 @@ const editionCount = (n: number) => `${n} ${n === 1 ? 'edición' : 'ediciones'}`
 ---
 
 <Base
-  title={pageTitle('Revista Imagen CEDA')}
+  title={pageTitle(`Revista Imagen ${site.acronym}`)}
   description={`Imagen ${site.acronym}, la revista digital del ${site.name}. Edición ${latest.number}, ${latest.date}, en PDF y gratuita.`}
 >
   <PageHero
     eyebrow="Revista"
-    title="Imagen CEDA"
+    title={`Imagen ${site.acronym}`}
     lead="Nuestra revista digital. Actualidad del comercio y la industria de Azul, novedades institucionales y comercios de la ciudad."
   />
 
@@ -84,7 +84,7 @@ const editionCount = (n: number) => `${n} ${n === 1 ? 'edición' : 'ediciones'}`
           {thisYear.length > 0 && (
             <>
               <h3 class="mt-6 text-lg text-navy">{latest.iso.slice(0, 4)}</h3>
-              <ul class="-mx-5 mt-6 flex snap-x snap-mandatory gap-6 overflow-x-auto px-5 pb-4 [&>li]:w-40 [&>li]:shrink-0 [&>li]:snap-start sm:[&>li]:w-52">
+              <ul class="-mx-5 mt-6 flex snap-x snap-mandatory scroll-px-5 gap-6 overflow-x-auto px-5 pb-4 [&>li]:w-40 [&>li]:shrink-0 [&>li]:snap-start sm:[&>li]:w-52">
                 {thisYear.map((issue) => (
                   <IssueCard issue={issue} cover={coverFor(issue.cover)} />
                 ))}

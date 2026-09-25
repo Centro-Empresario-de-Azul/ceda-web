@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { SearchIndex } from './search-index';
+import { SearchIndex, searchSummary } from './search-index';
 
 function buildIndex(pages: Record<number, string>): SearchIndex {
   const texts = Object.entries(pages).map(([page, text]) => ({ page: Number(page), text }));
@@ -59,6 +59,25 @@ describe('SearchIndex', () => {
     expect(results[0].snippet).toBe(expectedSnippet);
   });
 
+  it('matches queries that start or end with punctuation', async () => {
+    const index = buildIndex({ 1: 'La cuota es de $4.000 por mes', 2: 'La 1.ª Ronda de Negocios' });
+    await index.whenReady();
+
+    expect(index.search('$4.000').map((r) => r.page)).toEqual([1]);
+    expect(index.search('1.ª ronda').map((r) => r.page)).toEqual([2]);
+  });
+
+  it('keeps snippet offsets aligned after emoji, which are two UTF-16 units each', async () => {
+    const text = `${'🎉'.repeat(10)} ${'a'.repeat(50)} crecimiento ${'b'.repeat(50)}`;
+    const index = buildIndex({ 1: text });
+    await index.whenReady();
+
+    const matchStart = text.indexOf('crecimiento');
+    expect(index.search('crecimiento')[0].snippet).toBe(
+      `…${text.slice(matchStart - 40, matchStart + 'crecimiento'.length + 40).trim()}…`,
+    );
+  });
+
   it('sorts results by page ascending', async () => {
     const index = buildIndex({
       3: 'CEDA organiza el evento',
@@ -89,5 +108,13 @@ describe('SearchIndex', () => {
     await expect(index.whenReady()).rejects.toThrow('offline');
     await index.whenReady();
     expect(index.search('ceda')).toEqual([{ page: 2, snippet: 'CEDA celebra su aniversario' }]);
+  });
+});
+
+describe('searchSummary', () => {
+  it('says when nothing matched, and how many pages did otherwise', () => {
+    expect(searchSummary(0, 'azu')).toBe('Sin resultados para «azu».');
+    expect(searchSummary(1, 'azul')).toBe('1 página con resultados.');
+    expect(searchSummary(4, 'turismo')).toBe('4 páginas con resultados.');
   });
 });

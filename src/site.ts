@@ -60,7 +60,6 @@ export const site = {
 /** "España 620, Azul, Buenos Aires" */
 export const address = `${site.street}, ${site.city}, ${site.region}`;
 
-/** Page <title>, suffixed with the acronym. Home passes its own. */
 /** WhatsApp chat opened with a joining message already typed. */
 export const whatsappJoinUrl = `${site.whatsappUrl}?text=${encodeURIComponent(
   `Hola, quiero asociarme al ${site.acronym}.`,
@@ -71,6 +70,7 @@ export const affiliationsProse = site.affiliations
   .map((a) => `la ${a.name} (${a.acronym})`)
   .join(' y ');
 
+/** Page <title>, suffixed with the acronym. Home passes its own. */
 export const pageTitle = (section: string) => `${section} — ${site.acronym}`;
 
 export const nav = [

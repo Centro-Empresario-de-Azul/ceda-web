@@ -11,7 +11,15 @@ export interface SearchResult {
 const SNIPPET_RADIUS = 40;
 export const MIN_QUERY_LENGTH = 3;
 
-// Strips accents (á, ñ, ü…) so "azul" matches "Azuleño" and "Ano" matches "Año" alike.
+export const SEARCH_FAILED = 'No se pudo cargar el texto de la edición. Probá de nuevo.';
+
+/** What the reader's search announces once results are in. */
+export function searchSummary(pages: number, query: string): string {
+  if (pages === 0) return `Sin resultados para «${query}».`;
+  return pages === 1 ? '1 página con resultados.' : `${pages} páginas con resultados.`;
+}
+
+// Strips accents (á, ñ, ü…) so "comision" matches "Comisión" and "ano" matches "Año".
 function normalize(value: string): string {
   return value
     .normalize('NFD')
@@ -21,7 +29,7 @@ function normalize(value: string): string {
 
 interface NormalizedText {
   normalized: string;
-  // normalized[i] came from raw[map[i]] -- needed because a single raw character can
+  // normalized[i] came from raw[map[i]], both as UTF-16 indices -- needed because a single raw character can
   // normalize to zero characters (a lone combining mark), so the two strings can drift
   // out of alignment; without this map, slicing a snippet out of `raw` at a `normalized`
   // match index can land one or more characters off.
@@ -33,11 +41,14 @@ interface NormalizedText {
 function normalizeWithMap(raw: string): NormalizedText {
   let normalized = '';
   const map: number[] = [];
-  for (const [rawIndex, char] of Array.from(raw).entries()) {
-    for (const outChar of normalize(char)) {
-      normalized += outChar;
-      map.push(rawIndex);
-    }
+  let rawIndex = 0;
+  // Code point by code point, but indexed in UTF-16 units: that's what slice() and a
+  // RegExp match index use, and an emoji is two of them.
+  for (const char of raw) {
+    const out = normalize(char);
+    normalized += out;
+    for (let i = 0; i < out.length; i += 1) map.push(rawIndex);
+    rawIndex += char.length;
   }
   return { normalized, map };
 }
@@ -76,8 +87,9 @@ export class SearchIndex {
     const needle = normalize(query.trim());
     if (needle.length < MIN_QUERY_LENGTH) return [];
 
-    // Whole-word match: "azul" must not hit "azuleño".
-    const pattern = new RegExp(`\\b${escapeRegExp(needle)}\\b`);
+    // Whole-word match: "azul" must not hit "azuleño". Not \b, which only knows ASCII
+    // letters and needs one on each side, so "$4.000" or "1.ª" could never match.
+    const pattern = new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegExp(needle)}(?![\\p{L}\\p{N}])`, 'u');
 
     const results: SearchResult[] = [];
     for (const [page, entry] of this.pageText) {

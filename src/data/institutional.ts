@@ -105,7 +105,18 @@ export const foundationMembers = z
 
 /* Benefits as published in Revista Imagen CEDA N.º 316. Only list — the home page teaser
    derives from `featured` below; a hardcoded teaser once kept advertising retracted ones. */
-export const benefits = z.array(benefitSchema).parse([
+// The home page shows the featured ones in a grid of up to six.
+export const MAX_FEATURED_BENEFITS = 6;
+
+export const benefitsSchema = z.array(benefitSchema).refine(
+  (list) => {
+    const featured = list.filter((b) => b.featured).length;
+    return featured >= 1 && featured <= MAX_FEATURED_BENEFITS;
+  },
+  { message: `feature between 1 and ${MAX_FEATURED_BENEFITS} benefits for the home page` },
+);
+
+export const benefits = benefitsSchema.parse([
   {
     name: 'Salón para reuniones y eventos',
     body: `Espacio para reuniones, entrevistas y capacitaciones, y salón para charlas y eventos, en la sede de ${site.street}.`,
@@ -122,6 +133,7 @@ export const benefits = z.array(benefitSchema).parse([
     name: 'Extracciones en la sede',
     body: 'Extracciones en la sede: hasta $800.000 con Banco Provincia de Buenos Aires; otros bancos según su propio límite.',
     tag: 'Pagos',
+    featured: true,
   },
   {
     name: 'Banco Galicia',
@@ -139,6 +151,7 @@ export const benefits = z.array(benefitSchema).parse([
     name: 'Andreani',
     body: 'Envíos de bultos y correspondencia con 25% de descuento para socios.',
     tag: 'Logística',
+    featured: true,
   },
   {
     name: 'TALA RRHH',

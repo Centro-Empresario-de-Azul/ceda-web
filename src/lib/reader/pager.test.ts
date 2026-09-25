@@ -168,6 +168,17 @@ describe('SlidePager', () => {
     }
   });
 
+  it('keeps its target when a restarted glide ends the previous one early', () => {
+    const { pager, swipeTo } = setup(8);
+    pager.nextPage();
+    pager.nextPage();
+    // Chrome fires scrollend for the first glide, cut short on the way.
+    swipeTo(500);
+    expect(pager.getCurrentPage()).toBe(3);
+    swipeTo(800);
+    expect(pager.getCurrentPage()).toBe(3);
+  });
+
   it('drops the glide target as soon as the reader touches the strip', () => {
     vi.useFakeTimers();
     try {

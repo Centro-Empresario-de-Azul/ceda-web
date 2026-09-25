@@ -310,8 +310,11 @@
       scroll-snap-stop: always;
     }
 
+    /* Snaps to the same position as its spread's even page. Without it, switching from
+       single pages to spreads while on a right-hand page re-snaps to a stale offset. */
     .reader-slide:nth-child(odd):not(:first-child) {
       justify-content: flex-start;
+      scroll-snap-align: end;
     }
   }
 
@@ -389,6 +392,7 @@
 
   .reader-zoom-viewport {
     flex: 1;
+    min-height: 0;
     overflow: auto;
     overscroll-behavior: contain;
     padding: 1rem;
@@ -401,12 +405,18 @@
     cursor: zoom-in;
   }
 
+  /* A single 100% track gives the image a definite box to fit into; with an auto row
+     its max-height resolves against nothing and the page overflows the screen. */
   .reader-zoom[data-zoom='fit'] .reader-zoom-viewport {
     display: grid;
+    grid-template: 100% / 100%;
     place-items: center;
+    overflow: hidden;
   }
 
   .reader-zoom[data-zoom='fit'] .reader-zoom-viewport img {
+    width: auto;
+    height: auto;
     max-width: 100%;
     max-height: 100%;
   }

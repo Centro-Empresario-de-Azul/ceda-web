@@ -158,8 +158,9 @@ Un problema administrativo entre ARCA y NIC Argentina impide por ahora registrar
 - La Redirect Rule vive en la zona de Cloudflare (_Rules → Redirect Rules_) y corre
   antes que el Worker: `http.host eq "centroempresariodeazul.org.ar"` →
   `concat("https://www.centroempresariodeazul.org.ar", http.request.uri.path)`, 301.
-- El dominio figura en `wrangler.jsonc` (`routes`), `src/site.ts` (`origin`),
-  `astro.config.mjs` (`site`) y `public/robots.txt` (`Sitemap`).
+- El dominio figura en dos archivos: `wrangler.jsonc` (`routes`) y `src/site.ts`
+  (`origin`). De `origin` salen el `site` de `astro.config.mjs`, las URLs canónicas, el
+  sitemap y `robots.txt` (`src/pages/robots.txt.ts`).
 
 #### Pasar a `www.ceda.org.ar`
 
@@ -167,7 +168,7 @@ Cuando `ceda.org.ar` esté registrado, el dominio provisorio **no se da de baja*
 redirigir con 301 al definitivo, así no se pierden los links compartidos ni lo indexado.
 
 1. Agregar la zona `ceda.org.ar` en Cloudflare y delegar sus nameservers en NIC.ar.
-2. Reemplazar el dominio en los cuatro archivos de arriba: en `wrangler.jsonc` activar el
+2. Reemplazar el dominio en los dos archivos de arriba: en `wrangler.jsonc` activar el
    bloque `routes` comentado (`www.ceda.org.ar`) en lugar del actual.
 3. `npm run deploy`. Cloudflare crea el DNS y el certificado de `www.ceda.org.ar`.
 4. En la zona `ceda.org.ar`: registro A `192.0.2.1` proxied para el apex y la misma
@@ -201,7 +202,7 @@ src/
   styles/        global.css — tokens de marca
   site.ts        Identidad, contacto y navegación
 scripts/         Generadores de assets (logo, OG, revista)
-public/          Passthrough: _headers, robots.txt, site.webmanifest, img/, js/, revista/
+public/          Passthrough: _headers, site.webmanifest, img/, js/, revista/
 dist/            Salida del build — lo que publica wrangler (gitignored)
 ```
 

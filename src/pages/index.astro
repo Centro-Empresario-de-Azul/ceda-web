@@ -9,7 +9,13 @@ import ExternalLink from '../components/ExternalLink.astro';
 import IssueCard from '../components/IssueCard.astro';
 import { site, affiliationsProse, whatsappJoinUrl } from '../site';
 import { upcoming } from '../data/events';
-import { benefits, benefitTags, membership, historyMilestones } from '../data/institutional';
+import {
+  benefits,
+  benefitTags,
+  featuredBenefits,
+  membership,
+  historyMilestones,
+} from '../data/institutional';
 import { advocacy } from '../data/advocacy';
 import { issues, latest } from '../data/magazine';
 import { coverFor } from '../lib/magazine-covers';
@@ -20,7 +26,7 @@ const years = yearsSince(site.foundedISO, new Date());
 const latestCover = coverFor(latest.cover);
 const recentIssues = issues.slice(0, 6);
 const recentAdvocacy = advocacy.slice(0, 4);
-const benefitPreview = benefits.slice(0, 6);
+const benefitPreview = featuredBenefits;
 
 const monthYear = new Intl.DateTimeFormat('es-AR', {
   month: 'long',
@@ -35,7 +41,8 @@ const dayMonthYear = new Intl.DateTimeFormat('es-AR', {
 });
 
 // What CEDA does, each pillar ending in something dated and real rather than a slogan.
-const latestAdvocacy = advocacy[0];
+// The pillar speaks for CEDA itself, so the Fundación's work doesn't stand in for it.
+const latestAdvocacy = advocacy.find((g) => g.by === 'CEDA') ?? advocacy[0];
 const pillars = [
   {
     verb: 'Representa',
@@ -156,7 +163,7 @@ const shadow = 'shadow-[0_24px_50px_-24px_rgba(13,27,54,0.55)]';
       {
         pillars.map((p) => (
           <article class="flex flex-col">
-            <h3 class="display-tight text-5xl text-navy">{p.verb}</h3>
+            <h3 class="display-tight text-4xl text-navy lg:text-5xl">{p.verb}</h3>
             <p class="mt-4 flex-1 leading-relaxed text-muted">{p.body}</p>
             <a href={p.href} class="group mt-6 block border-t-2 border-orange pt-4">
               <span class="text-xs font-semibold tracking-wide text-muted uppercase">
@@ -198,7 +205,12 @@ const shadow = 'shadow-[0_24px_50px_-24px_rgba(13,27,54,0.55)]';
                 <p class="text-sm font-semibold text-muted">
                   <time datetime={g.date}>{dayMonthYear.format(new Date(g.date))}</time>
                 </p>
-                <h3 class="text-xl leading-snug text-navy">{g.title}</h3>
+                <div>
+                  <h3 class="text-xl leading-snug text-navy">{g.title}</h3>
+                  {g.by !== 'CEDA' && (
+                    <p class="mt-1 text-sm font-semibold text-orange-deep">{g.by}</p>
+                  )}
+                </div>
                 <SourceLink href={g.source.href} class="link-underline text-sm text-muted">
                   Fuente: {g.source.label}
                 </SourceLink>
@@ -235,7 +247,7 @@ const shadow = 'shadow-[0_24px_50px_-24px_rgba(13,27,54,0.55)]';
       </div>
 
       <ul
-        class="-mx-5 mt-12 flex snap-x snap-mandatory gap-6 overflow-x-auto px-5 pb-4 [&_.text-muted]:text-sky-2 [&_.text-navy]:text-white [&>li]:w-40 [&>li]:shrink-0 [&>li]:snap-start lg:[&>li]:w-[calc((100%-7.5rem)/6)]"
+        class="-mx-5 mt-12 flex snap-x snap-mandatory scroll-px-5 gap-6 overflow-x-auto px-5 pb-4 [&_.text-muted]:text-sky-2 [&_.text-navy]:text-white [&>li]:w-40 [&>li]:shrink-0 [&>li]:snap-start lg:[&>li]:w-[calc((100%-7.5rem)/6)]"
       >
         {recentIssues.map((issue) => <IssueCard issue={issue} cover={coverFor(issue.cover)} />)}
       </ul>

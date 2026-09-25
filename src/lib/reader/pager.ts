@@ -55,11 +55,11 @@ export class SlidePager implements PageNavigator {
       () => {
         this.scheduleSync();
         clearTimeout(this.settleTimer);
-        this.settleTimer = setTimeout(() => this.settle(), SETTLE_MS);
+        this.settleTimer = setTimeout(() => this.settle(true), SETTLE_MS);
       },
       { passive: true },
     );
-    scroller.addEventListener('scrollend', () => this.settle());
+    scroller.addEventListener('scrollend', () => this.settle(false));
     // A swipe or wheel can interrupt a programmatic glide before it arrives; from then on
     // the scroll position, not the abandoned target, says what is on screen.
     for (const type of ['pointerdown', 'touchstart', 'wheel']) {
@@ -166,8 +166,13 @@ export class SlidePager implements PageNavigator {
       .filter((img): img is HTMLImageElement => img instanceof HTMLImageElement);
   }
 
-  // Once scrolling stops, wherever it stopped is the truth.
-  private settle(): void {
+  // Once scrolling stops, wherever it stopped is the truth. Except for a scrollend short
+  // of a pending target: a quick second click restarts the glide, and Chrome ends the
+  // first one there. Touch and wheel already dropped the target if the reader took over,
+  // and the quiet-period timer still settles a glide that really stopped short.
+  private settle(quiet: boolean): void {
+    const pending = this.pendingTarget;
+    if (!quiet && pending !== null && Math.abs(this.scroller.scrollLeft - pending) > 2) return;
     clearTimeout(this.settleTimer);
     this.pendingTarget = null;
     this.syncFromScroll();
