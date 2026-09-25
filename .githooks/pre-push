@@ -40,6 +40,20 @@ for (const page of pages) {
     if (fused) fail(page + ": fused words — " + fused[0] + "  (add {\" \"} between the text and the tag)");
   }
 
+  // The same collapse at an inline tag boundary: "municipio y<strong>318" renders as
+  // "y318". Prettier can move a word onto the line of the tag and cause it.
+  const inline = "strong|a|span|em|b|time";
+  const text = body.slice(0, body.lastIndexOf("<script"));
+  for (const re of [
+    new RegExp("[\\p{L}\\p{N},;:]<(" + inline + ")\\b[^>]*>(?:<[^>]+>)*[\\p{L}\\p{N}¿¡$]", "gu"),
+    new RegExp("</(" + inline + ")>[\\p{L}\\p{N}¿¡$]", "gu"),
+  ]) {
+    for (const m of text.matchAll(re)) {
+      const around = text.slice(Math.max(0, m.index - 25), m.index + 45).replace(/<[^>]+>/g, "|");
+      fail(page + ": word fused at a tag — …" + around + "…  (add {\" \"})");
+    }
+  }
+
   // Retired contact details and the shortener must never reappear. CEDA has one line,
   // WhatsApp 2281 58-3969 (src/site.ts).
   for (const [re, label] of [

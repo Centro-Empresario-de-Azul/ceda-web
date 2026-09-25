@@ -108,10 +108,14 @@ import heroImg from '../assets/img/equipo-mesa.jpg';
               'Empezás a usar los beneficios.',
             ].map((step, i) => (
               <li class="flex items-start gap-3">
-                <span class="grid size-7 shrink-0 place-items-center rounded-full bg-white/10 text-sm font-semibold text-white">
+                {/* The <ol> already numbers the steps for assistive tech. */}
+                <span
+                  class="grid size-7 shrink-0 place-items-center rounded-full bg-white/10 text-sm font-semibold text-white"
+                  aria-hidden="true"
+                >
                   {i + 1}
                 </span>
-                {step}
+                <span>{step}</span>
               </li>
             ))
           }
