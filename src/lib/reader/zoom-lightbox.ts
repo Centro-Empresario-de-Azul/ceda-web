@@ -44,21 +44,19 @@ export class ZoomLightbox {
       if (event.target === this.viewport) this.close();
     });
     root.addEventListener('keydown', (event) => {
-      if (event.key === 'ArrowLeft') this.show(this.page - 1);
-      else if (event.key === 'ArrowRight') this.show(this.page + 1);
-      else if (event.key === '+' || event.key === '=') this.step(1);
+      // Zoomed in, the arrows pan the enlarged page instead.
+      const paging = this.level === 'fit';
+      if (paging && event.key === 'ArrowLeft') {
+        event.preventDefault();
+        this.show(this.page - 1);
+      } else if (paging && event.key === 'ArrowRight') {
+        event.preventDefault();
+        this.show(this.page + 1);
+      } else if (event.key === '+' || event.key === '=') this.step(1);
       else if (event.key === '-') this.step(-1);
     });
     // Fires for close() and for Escape alike, so both restore focus the same way.
     root.addEventListener('close', () => this.returnFocusTo?.focus());
-  }
-
-  get currentPage(): number {
-    return this.page;
-  }
-
-  get zoomLevel(): ZoomLevel {
-    return this.level;
   }
 
   open(page: number): void {

@@ -50,10 +50,18 @@ jobs:
 
       - name: Download the raw PDF
         id: raw
+        env:
+          N: ${{ steps.issue.outputs.number }}
         run: |
           mapfile -t pdfs < <(gh release view "$TAG" --json assets --jq '.assets[].name | select(test("\\.pdf$"; "i"))')
           if [ "${#pdfs[@]}" -ne 1 ]; then
             echo "::error::Attach exactly one PDF to the release (found ${#pdfs[@]})"
+            exit 1
+          fi
+          # A rerun after success finds only the reduced copy; reducing it again would render
+          # the page images from 150dpi and overwrite the good output with a blurrier one.
+          if [ "${pdfs[0]}" = "imagen-ceda-$N-web.pdf" ]; then
+            echo "::error::This release was already reduced. To redo it, delete its PDF and attach the original."
             exit 1
           fi
           gh release download "$TAG" --pattern "${pdfs[0]}" --output "$RUNNER_TEMP/raw.pdf"

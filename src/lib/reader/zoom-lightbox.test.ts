@@ -67,18 +67,32 @@ describe('ZoomLightbox', () => {
     expect(img.getAttribute('src')).toBe('/p/3-1600.webp');
     key(dialog, 'ArrowLeft');
     key(dialog, 'ArrowLeft');
-    expect(lightbox.currentPage).toBe(1);
+    expect(img.getAttribute('src')).toBe('/p/1-1600.webp');
     expect(onPageChange).toHaveBeenLastCalledWith(1);
   });
 
+  it('leaves the arrow keys to panning once zoomed in', () => {
+    const { dialog, q, img, lightbox } = setup();
+    lightbox.open(2);
+    q('[data-zoom-in]').click();
+    const event = new KeyboardEvent('keydown', {
+      key: 'ArrowRight',
+      bubbles: true,
+      cancelable: true,
+    });
+    dialog.dispatchEvent(event);
+    expect(img.getAttribute('src')).toBe('/p/2-1600.webp');
+    expect(event.defaultPrevented).toBe(false);
+  });
+
   it('does not page past either end', () => {
-    const { q, lightbox } = setup(2);
+    const { q, img, lightbox } = setup(2);
     lightbox.open(2);
     q('[data-zoom-next]').click();
-    expect(lightbox.currentPage).toBe(2);
+    expect(img.getAttribute('src')).toBe('/p/2-1600.webp');
     lightbox.open(1);
     q('[data-zoom-prev]').click();
-    expect(lightbox.currentPage).toBe(1);
+    expect(img.getAttribute('src')).toBe('/p/1-1600.webp');
   });
 
   it('steps through zoom levels with the buttons, keys and a double-click', () => {

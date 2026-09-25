@@ -30,3 +30,6 @@ Thumbs.db
 # Agent tooling artifacts
 .playwright-mcp/
 .superpowers/
+
+# Interrupted magazine page renders (scripts/render-magazine-pages.mjs)
+public/revista/paginas/*.partial-*

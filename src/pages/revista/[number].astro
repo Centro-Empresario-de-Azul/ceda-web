@@ -112,7 +112,7 @@ const pageLabel = (page: number) => `Página ${page} de ${pageCount}`;
                 <img
                   src={pageUrl(issue.number, page, smallest)}
                   srcset={pageSrcset(pageSet, page)}
-                  sizes="(min-width: 1024px) and (min-aspect-ratio: 5/4) 50vw, 100vw"
+                  sizes="(min-width: 1024px) and (min-aspect-ratio: 5/4) min(50vw, 36rem), min(100vw, 72rem)"
                   width={1080}
                   height={Math.round(1080 * ratio)}
                   alt={`Página ${page}`}
@@ -248,7 +248,11 @@ const pageLabel = (page: number) => `Página ${page} de ${pageCount}`;
       const linked = pageFromHash(location.hash, pageCount);
       if (linked) pager.goToPage(linked, true);
 
-      pageInput.addEventListener('change', () => pager.goToPage(Number(pageInput.value), true));
+      pageInput.addEventListener('change', () => {
+        pager.goToPage(Number(pageInput.value), true);
+        // A blank, out-of-range or same-spread entry moves nowhere and fires no page change.
+        pageInput.value = String(pager.getCurrentPage());
+      });
 
       const zoomRoot = document.getElementById('reader-zoom');
       const zoomButton = document.getElementById('reader-zoom-button');

@@ -2,7 +2,8 @@ import { buildViews, viewIndexOf } from './spreads';
 import type { PageNavigator } from './reader-navigation';
 
 /** Two-page spreads need width and a landscape screen. Mirrors the spread block in
-    global.css — change both together. */
+    global.css and the page images' `sizes` in revista/[number].astro — change all three
+    together. */
 export const SPREAD_QUERY = '(min-width: 1024px) and (min-aspect-ratio: 5/4)';
 
 export interface PagerOptions {
@@ -23,12 +24,15 @@ export interface SpreadTurn {
 
 // How many views ahead/behind get their images requested before they scroll into sight.
 const WARM_AHEAD = 2;
+// Stands in for `scrollend`, which older Safari lacks: this long without a scroll event
+// means the strip has come to rest.
+const SETTLE_MS = 150;
 
 /**
  * Pages are laid out in a native horizontal scroll-snap strip: the browser does the
  * swiping, momentum and snapping on the compositor. This class only tracks which view is
- * showing and moves between views on request — it never reorders the DOM, which is what
- * made the old page-curl library jump the whole window on every turn.
+ * showing and moves between views on request. It never reorders the DOM: doing so jumps
+ * the whole window in Chrome on every turn.
  */
 export class SlidePager implements PageNavigator {
   private slides: HTMLElement[];
@@ -37,6 +41,7 @@ export class SlidePager implements PageNavigator {
   private listeners: ((page: number) => void)[] = [];
   private pendingTarget: number | null = null;
   private frame = 0;
+  private settleTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(
     private scroller: HTMLElement,
@@ -45,13 +50,21 @@ export class SlidePager implements PageNavigator {
     this.slides = [...scroller.querySelectorAll<HTMLElement>('[data-page]')];
     this.views = buildViews(this.slides.length, options.spreadQuery.matches);
 
-    scroller.addEventListener('scroll', () => this.scheduleSync(), { passive: true });
-    // A swipe can interrupt a programmatic glide before it arrives; once scrolling
-    // settles, wherever it stopped is the truth.
-    scroller.addEventListener('scrollend', () => {
-      this.pendingTarget = null;
-      this.syncFromScroll();
-    });
+    scroller.addEventListener(
+      'scroll',
+      () => {
+        this.scheduleSync();
+        clearTimeout(this.settleTimer);
+        this.settleTimer = setTimeout(() => this.settle(), SETTLE_MS);
+      },
+      { passive: true },
+    );
+    scroller.addEventListener('scrollend', () => this.settle());
+    // A swipe or wheel can interrupt a programmatic glide before it arrives; from then on
+    // the scroll position, not the abandoned target, says what is on screen.
+    for (const type of ['pointerdown', 'touchstart', 'wheel']) {
+      scroller.addEventListener(type, () => (this.pendingTarget = null), { passive: true });
+    }
     // Rotating a tablet or resizing a window switches between single pages and spreads;
     // keep the reader on the page they were looking at.
     options.spreadQuery.addEventListener('change', () => {
@@ -133,18 +146,31 @@ export class SlidePager implements PageNavigator {
     });
   }
 
-  // The cover sits centred on its own; every other view starts at its first page.
+  // A lone page (a phone view, or a cover in spreads) is centred; a spread starts at its
+  // left page. Clamped because the strip can't scroll past either end.
   private viewLeft(index: number): number {
-    if (index === 0) return 0;
-    const first = this.views[index]?.[0];
-    const slide = first ? this.slides[first - 1] : undefined;
-    return slide ? slide.offsetLeft : 0;
+    const view = this.views[index];
+    const slide = view ? this.slides[view[0] - 1] : undefined;
+    if (!slide) return 0;
+    const left =
+      view.length === 1
+        ? slide.offsetLeft + (slide.offsetWidth - this.scroller.clientWidth) / 2
+        : slide.offsetLeft;
+    const max = this.scroller.scrollWidth - this.scroller.clientWidth;
+    return Math.min(Math.max(left, 0), Math.max(max, 0));
   }
 
   private imagesOf(index: number): HTMLImageElement[] {
     return (this.views[index] ?? [])
       .map((page) => this.slides[page - 1]?.querySelector('img'))
       .filter((img): img is HTMLImageElement => img instanceof HTMLImageElement);
+  }
+
+  // Once scrolling stops, wherever it stopped is the truth.
+  private settle(): void {
+    clearTimeout(this.settleTimer);
+    this.pendingTarget = null;
+    this.syncFromScroll();
   }
 
   private scheduleSync(): void {

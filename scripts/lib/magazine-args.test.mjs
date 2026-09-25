@@ -68,7 +68,15 @@ describe('issueFromTag', () => {
   });
 
   it('rejects anything else', () => {
-    for (const tag of ['319', 'v319', 'revista-', 'revista-31a', 'Revista-319', 'revista-319-b']) {
+    for (const tag of [
+      '319',
+      'v319',
+      'revista-',
+      'revista-31a',
+      'Revista-319',
+      'revista-319-b',
+      'revista-0319',
+    ]) {
       expect(issueFromTag(tag)).toBeNull();
     }
   });

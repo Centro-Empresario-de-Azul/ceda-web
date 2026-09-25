@@ -108,14 +108,17 @@ import heroImg from '../assets/img/equipo-mesa.jpg';
               'Empezás a usar los beneficios.',
             ].map((step, i) => (
               <li class="flex items-start gap-3">
-                {/* The <ol> already numbers the steps for assistive tech. */}
+                {/* Lists styled without markers lose their numbering in some screen
+                    readers, so the step number is spoken from text instead. */}
                 <span
                   class="grid size-7 shrink-0 place-items-center rounded-full bg-white/10 text-sm font-semibold text-white"
                   aria-hidden="true"
                 >
                   {i + 1}
                 </span>
-                <span>{step}</span>
+                <span>
+                  <span class="sr-only">Paso {i + 1}:</span> {step}
+                </span>
               </li>
             ))
           }

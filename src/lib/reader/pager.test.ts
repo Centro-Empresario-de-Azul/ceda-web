@@ -39,21 +39,36 @@ function setup(
     scroller.appendChild(li);
   }
   document.body.replaceChildren(scroller);
-  // jsdom does no layout: give each slide the offset a real strip would have. In spreads
-  // a slide is half the strip and the cover's margins fill the other half.
-  const slideLeft = (page: number) =>
-    spreadQuery.matches
-      ? page === 1
-        ? SLIDE_WIDTH / 2
-        : (SLIDE_WIDTH / 2) * page
-      : SLIDE_WIDTH * (page - 1);
-  [...scroller.children].forEach((li, i) =>
-    Object.defineProperty(li, 'offsetLeft', { get: () => slideLeft(i + 1) }),
-  );
+  // jsdom does no layout: mirror global.css. In spreads a slide is half the strip, and
+  // the lone covers (the first page, and an even-numbered last page) get quarter margins.
+  const layout = () => {
+    const slides: { left: number; width: number }[] = [];
+    let x = 0;
+    for (let page = 1; page <= pageCount; page += 1) {
+      if (!spreadQuery.matches) {
+        slides.push({ left: x, width: SLIDE_WIDTH });
+        x += SLIDE_WIDTH;
+        continue;
+      }
+      const lone = page === 1 || (page === pageCount && page % 2 === 0);
+      const margin = lone ? SLIDE_WIDTH / 4 : 0;
+      slides.push({ left: x + margin, width: SLIDE_WIDTH / 2 });
+      x += SLIDE_WIDTH / 2 + 2 * margin;
+    }
+    return { slides, scrollWidth: x };
+  };
+  [...scroller.children].forEach((li, i) => {
+    Object.defineProperty(li, 'offsetLeft', { get: () => layout().slides[i].left });
+    Object.defineProperty(li, 'offsetWidth', { get: () => layout().slides[i].width });
+  });
+  Object.defineProperty(scroller, 'clientWidth', { get: () => SLIDE_WIDTH });
+  Object.defineProperty(scroller, 'scrollWidth', { get: () => layout().scrollWidth });
   let scrollLeft = 0;
   Object.defineProperty(scroller, 'scrollLeft', { get: () => scrollLeft });
+  // Like a real scroller, it can't go past either end.
   const scrollTo = vi.fn((opts: ScrollToOptions) => {
-    scrollLeft = opts.left ?? scrollLeft;
+    const max = layout().scrollWidth - SLIDE_WIDTH;
+    scrollLeft = Math.min(Math.max(opts.left ?? scrollLeft, 0), max);
   });
   scroller.scrollTo = scrollTo as unknown as typeof scroller.scrollTo;
 
@@ -69,8 +84,12 @@ function setup(
     scrollLeft = x;
     scroller.dispatchEvent(new Event('scrollend'));
   };
+  const scrollWithoutEnd = (x: number) => {
+    scrollLeft = x;
+    scroller.dispatchEvent(new Event('scroll'));
+  };
   const img = (page: number) => scroller.children[page - 1].querySelector('img')!;
-  return { pager, scroller, scrollTo, spreadQuery, pages, swipeTo, img };
+  return { pager, scroller, scrollTo, spreadQuery, pages, swipeTo, scrollWithoutEnd, img };
 }
 
 describe('SlidePager', () => {
@@ -121,6 +140,51 @@ describe('SlidePager', () => {
     swipeTo(810);
     expect(pager.getCurrentPage()).toBe(3);
     expect(pages).toEqual([3]);
+  });
+
+  it('reaches a lone back cover on an even page count, centred like the front one', () => {
+    const { pager, scrollTo, swipeTo } = setup(6, { spreads: true });
+    pager.goToPage(6, true);
+    expect(pager.getVisiblePages()).toEqual([6]);
+    expect(scrollTo).toHaveBeenLastCalledWith({ left: 1200, behavior: 'instant' });
+    swipeTo(1200);
+    expect(pager.getVisiblePages()).toEqual([6]);
+    expect(pager.canGoNext()).toBe(false);
+    pager.prevPage();
+    expect(pager.getVisiblePages()).toEqual([4, 5]);
+  });
+
+  it('settles on the scroll position without scrollend, after a pause', () => {
+    vi.useFakeTimers();
+    try {
+      const { pager, scrollWithoutEnd } = setup(6);
+      pager.nextPage();
+      // A glide towards page 2 that a swipe carried on to page 4 instead.
+      scrollWithoutEnd(1200);
+      vi.advanceTimersByTime(200);
+      expect(pager.getCurrentPage()).toBe(4);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('drops the glide target as soon as the reader touches the strip', () => {
+    vi.useFakeTimers();
+    try {
+      const { pager, scroller, scrollWithoutEnd } = setup(6);
+      pager.nextPage();
+      scrollWithoutEnd(1200);
+      vi.advanceTimersByTime(20);
+      // Still gliding towards page 2: positions on the way are ignored.
+      expect(pager.getCurrentPage()).toBe(2);
+
+      scroller.dispatchEvent(new Event('pointerdown'));
+      scrollWithoutEnd(1200);
+      vi.advanceTimersByTime(20);
+      expect(pager.getCurrentPage()).toBe(4);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('keeps the same page when the screen switches between pages and spreads', () => {

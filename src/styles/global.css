@@ -293,8 +293,13 @@
       scroll-snap-stop: normal;
     }
 
-    .reader-slide:first-child {
+    /* The covers sit alone in the middle: the front one always, the back one when an
+       even page count leaves it without a facing page. The extra :last-child makes this
+       outrank the even-page rule below. */
+    .reader-slide:first-child,
+    .reader-slide:last-child:nth-child(even) {
       margin-inline: 25%;
+      justify-content: center;
       scroll-snap-align: center;
       scroll-snap-stop: always;
     }

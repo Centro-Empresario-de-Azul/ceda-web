@@ -34,6 +34,6 @@ export const psString = (s) => `(${s.replace(/[\\()]/g, (c) => `\\${c}`)})`;
 
 // The reduce-magazine workflow takes the issue number from a release tag like `revista-319`.
 export function issueFromTag(tag) {
-  const match = /^revista-(\d+)$/.exec(tag.trim());
+  const match = /^revista-([1-9]\d*)$/.exec(tag.trim());
   return match ? match[1] : null;
 }

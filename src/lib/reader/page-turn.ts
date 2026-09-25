@@ -9,11 +9,14 @@ const DURATION_MS = 650;
  * Declines (returns false) whenever it can't do that cleanly — the pager then slides.
  */
 export function createPageTurn(stage: HTMLElement): (turn: SpreadTurn) => boolean {
-  let running = false;
+  // The turn in progress. A second click lands before it ends; its overlays would then sit
+  // over pages that are no longer there, so they go at once and the new turn starts.
+  let active: (() => void) | null = null;
 
   return ({ direction, from, to, jump }) => {
-    // Only between two full spreads: the lone cover and a lone last page don't fold.
-    if (running || from.length !== 2 || to.length !== 2) return false;
+    active?.();
+    // Only between two full spreads: the lone covers don't fold.
+    if (from.length !== 2 || to.length !== 2) return false;
     if (![...from, ...to].every((img) => img.complete && img.naturalWidth > 0)) return false;
     if (typeof stage.animate !== 'function') return false;
 
@@ -58,7 +61,6 @@ export function createPageTurn(stage: HTMLElement): (turn: SpreadTurn) => boolea
     shade.className = 'page-turn-shade';
     leaf.appendChild(shade);
 
-    running = true;
     stage.append(still, leaf);
     jump();
 
@@ -77,8 +79,9 @@ export function createPageTurn(stage: HTMLElement): (turn: SpreadTurn) => boolea
     const cleanUp = () => {
       still.remove();
       leaf.remove();
-      running = false;
+      if (active === cleanUp) active = null;
     };
+    active = cleanUp;
     animation.finished.then(cleanUp, cleanUp);
     return true;
   };

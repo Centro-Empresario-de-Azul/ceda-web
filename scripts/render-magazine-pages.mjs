@@ -6,7 +6,15 @@
 // Requires poppler (brew install poppler) for pdftoppm, pdftotext and pdfinfo.
 
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -37,8 +45,7 @@ const metaOut = join(root, 'src/data/magazine-pages', `${issue}.json`);
 if ((existsSync(outDir) || existsSync(metaOut)) && !force) {
   fail(`Pages for issue ${issue} already exist. Re-run with --force to replace them.`);
 }
-rmSync(outDir, { recursive: true, force: true });
-mkdirSync(outDir, { recursive: true });
+mkdirSync(dirname(outDir), { recursive: true });
 mkdirSync(dirname(metaOut), { recursive: true });
 
 const info = execFileSync('pdfinfo', [src], { encoding: 'utf8' });
@@ -47,12 +54,18 @@ const widthPt = Number(info.match(/^Page size:\s+([\d.]+)/m)?.[1]);
 if (!pageCount || !widthPt) fail(`Could not read page count/size from ${src}`);
 
 const tmp = mkdtempSync(join(tmpdir(), 'ceda-pages-'));
+// Pages are written beside the final folder and swapped in only once all of them exist,
+// so a failed run leaves the previous pages and metadata untouched. Same filesystem as
+// outDir, so the swap is a rename.
+const staging = mkdtempSync(`${outDir}.partial-`);
 try {
   execFileSync('pdftoppm', ['-r', String(dpiFor(widthPt)), '-png', src, join(tmp, 'p')]);
   const rasters = readdirSync(tmp)
     .filter((f) => f.endsWith('.png'))
     .sort();
-  if (rasters.length !== pageCount) fail(`Expected ${pageCount} pages, rendered ${rasters.length}`);
+  if (rasters.length !== pageCount) {
+    throw new Error(`Expected ${pageCount} pages, rendered ${rasters.length}`);
+  }
 
   const pages = [];
   let bytes = 0;
@@ -66,7 +79,7 @@ try {
         .resize({ width: target })
         // Text-heavy pages: full chroma keeps coloured type crisp at a small size cost.
         .webp({ quality: 78, smartSubsample: true, effort: 5 })
-        .toFile(join(outDir, pageFile(page, target)));
+        .toFile(join(staging, pageFile(page, target)));
       bytes += info.size;
     }
     const text = execFileSync(
@@ -76,6 +89,13 @@ try {
     );
     pages.push({ page, ratio: +(height / width).toFixed(4), text: cleanPageText(text) });
   }
+
+  writeFileSync(
+    join(staging, 'texto.json'),
+    JSON.stringify(pages.map((p) => ({ page: p.page, text: p.text }))),
+  );
+  rmSync(outDir, { recursive: true, force: true });
+  renameSync(staging, outDir);
 
   // Page proportions are read at build time (image dimensions, layout); the text is only
   // fetched by the browser when someone searches.
@@ -87,10 +107,6 @@ try {
       2,
     ) + '\n',
   );
-  writeFileSync(
-    join(outDir, 'texto.json'),
-    JSON.stringify(pages.map((p) => ({ page: p.page, text: p.text }))),
-  );
 
   console.log(
     `pages  public/${pagesDir(issue)}/  ${pageCount} pages × ${PAGE_WIDTHS.length} widths, ` +
@@ -99,4 +115,5 @@ try {
   console.log(`meta   src/data/magazine-pages/${issue}.json`);
 } finally {
   rmSync(tmp, { recursive: true, force: true });
+  rmSync(staging, { recursive: true, force: true });
 }

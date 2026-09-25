@@ -95,8 +95,8 @@ volver a generar solo las imágenes: `node scripts/render-magazine-pages.mjs <pd
 Si solo necesitás la versión reducida, GitHub la genera:
 
 1. En el repo, **Releases → Draft a new release**.
-2. Tag: `revista-<número>` (por ejemplo `revista-319`). Adjuntá el PDF original (hasta
-   2 GB) y tocá **Publish release**.
+2. Tag: `revista-<número>` (por ejemplo `revista-319`), creado sobre `main`. Adjuntá el PDF
+   original (hasta 2 GB) y tocá **Publish release**.
 3. En unos minutos el workflow _Reduce magazine_ (pestaña **Actions**) reemplaza en la
    release el PDF original por `imagen-ceda-<número>-web.pdf` y la tapa, listos para
    descargar.
