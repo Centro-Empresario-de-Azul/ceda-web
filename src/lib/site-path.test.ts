@@ -58,8 +58,8 @@ describe('stripTitleSuffix', () => {
   });
 
   it('leaves a title without the suffix alone', () => {
-    expect(stripTitleSuffix('CEDA — Centro Empresario de Azul', 'CEDA')).toBe(
-      'CEDA — Centro Empresario de Azul',
+    expect(stripTitleSuffix('CEDA • Centro Empresario de Azul', 'CEDA')).toBe(
+      'CEDA • Centro Empresario de Azul',
     );
   });
 });
