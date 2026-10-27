@@ -61,6 +61,15 @@ export const issuesSchema = z
 
 export const issues = issuesSchema.parse([
   {
+    number: 319,
+    date: 'Octubre 2026',
+    iso: '2026-10',
+    headline: 'Mesa de trabajo con 20 cámaras en la EXPOTAN 2026',
+    pages: 25,
+    pdf: '/revista/imagen-ceda-319-web.pdf',
+    cover: 'cover-319.jpg',
+  },
+  {
     number: 318,
     date: 'Septiembre 2026',
     iso: '2026-09',
