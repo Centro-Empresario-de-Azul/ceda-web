@@ -264,7 +264,8 @@ export const foundingBoard = z.array(seatSchema).parse([
   { role: 'Gerente', names: ['Albino T. Díaz'] },
 ]);
 
-// Comisión Directiva 2026, as printed in Revista Imagen CEDA N.º 316 (julio 2026).
+// Comisión Directiva 2026, as printed in Revista Imagen CEDA N.º 316 (julio 2026). The
+// magazine misspells "Marta A. Marquis" and "Ciufardi"; the spellings here are correct.
 export const boardTitle = 'Comisión Directiva 2026';
 
 export const board = z.array(seatSchema).parse([

@@ -34,6 +34,34 @@ export const entriesSchema = z.array(entrySchema).superRefine((list, ctx) => {
 
 const entries = entriesSchema.parse([
   {
+    title: 'Habilitaciones comerciales',
+    date: '2026-10-09',
+    body: 'CEDA participó de una nueva reunión ampliada en el Concejo Deliberante sobre los proyectos de habilitaciones comerciales, junto a concejales, el Departamento Ejecutivo, electricistas matriculados, el Colegio de Martilleros y el Centro de Almaceneros. Se trabajó sobre cambios a la normativa, el circuito administrativo y la recepción de trámites, con el compromiso de llegar a una ordenanza consensuada.',
+    source: {
+      label: 'Concejo Deliberante de Azul, 09/10/2026',
+      href: 'https://concejodeliberantedeazul.gob.ar/index.php/2026/10/09/habilitaciones-se-avanza-en-la-reglamentacion-de-una-nueva-ordenanza/',
+    },
+  },
+  {
+    title: 'Convenio con la UNICEN por el Banco de Alimentos',
+    date: '2026-09-29',
+    by: 'Fundación CEDA',
+    body: 'La Fundación CEDA firmó un convenio marco con la Universidad Nacional del Centro y uno específico con su Facultad de Agronomía: docentes de la Licenciatura en Tecnología de los Alimentos capacitarán a los voluntarios del Banco de Alimentos de Azul en manipulación e inocuidad, y asesorarán sobre los espacios de acopio.',
+    source: {
+      label: 'Revista Imagen CEDA N.º 319, octubre 2026',
+      href: '/revista/319',
+    },
+  },
+  {
+    title: 'Bienvenida a la Primavera en el centro',
+    date: '2026-09-18',
+    body: 'Por iniciativa de CEDA, el 18 y 19 de septiembre los comercios del centro de Azul recibieron la primavera con descuentos, promociones, productos en las veredas y adornos alusivos.',
+    source: {
+      label: 'Revista Imagen CEDA N.º 319, octubre 2026',
+      href: '/revista/319',
+    },
+  },
+  {
     title: 'Sesión especial por la autovía de la Ruta 3',
     date: '2026-09-06',
     by: 'Fundación CEDA',
